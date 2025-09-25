@@ -71,11 +71,7 @@
             <!-- Selected season label -->
             <div id="seasonLabel" class="text-xs md:text-sm" style="color:var(--muted)"></div>
           </div>
-          <!-- Season selector -->
-          <div class="flex items-center gap-1 text-xs md:text-sm">
-            <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap">Seizoen:</label>
-            <select id="seasonSelect" class="border rounded px-1 py-0.5 text-xs md:text-sm"></select>
-          </div>
+          <!-- Season selector removed from header; repositioned above chart -->
         </div>
 
         <!-- KPI’s -->
@@ -94,6 +90,11 @@
 
         <!-- Chart -->
         <div class="relative h-[320px] md:h-[420px] px-2 pb-2" id="chartWrap">
+          <!-- Season selector is positioned above the chart for better layout -->
+          <div class="flex items-center gap-1 text-xs md:text-sm mb-2">
+            <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap">Seizoen:</label>
+            <select id="seasonSelect" class="border rounded px-1 py-0.5 text-xs md:text-sm"></select>
+          </div>
           <canvas id="chart" aria-label="Grafiek contractprijs & notering" role="img"></canvas>
           <div id="chartLoader" class="loading-overlay">
             <div class="flex items-center gap-2 text-sm">
@@ -158,6 +159,45 @@
     </aside>
   </main>
 
+  <!-- Primeurs Section -->
+  <section class="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-6" id="primeursSection" style="display:none">
+    <div class="rounded-2xl shadow-sm" style="background:var(--card); border:1px solid var(--line);">
+      <div class="p-3 md:p-4 border-b" style="border-color:var(--line)">
+        <h3 class="font-semibold mb-2 text-sm md:text-base" data-i18n="primeurs_title">Historiek primeurs</h3>
+        <div id="primeurTabs" class="flex flex-wrap gap-2"></div>
+      </div>
+      <div class="p-3 md:p-4">
+        <div class="relative h-[280px] md:h-[360px] mb-4">
+          <canvas id="primeursChart" aria-label="Primeurs grafiek" role="img"></canvas>
+          <div id="primeursChartLoader" class="loading-overlay">
+            <div class="flex items-center gap-2 text-sm">
+              <div class="spinner" aria-hidden="true"></div>
+              <span id="primeursChartLoaderText">Data laden…</span>
+            </div>
+          </div>
+        </div>
+        <div class="relative max-h-[260px] overflow-auto rounded-lg ring-1" style="--tw-ring-color:var(--line)">
+          <div id="primeursTableLoader" class="loading-overlay">
+            <div class="flex items-center gap-2 text-sm">
+              <div class="spinner" aria-hidden="true"></div>
+              <span id="primeursTableLoaderText">Tabel laden…</span>
+            </div>
+          </div>
+          <table class="w-full text-[13px] md:text-sm">
+            <thead style="background:var(--card); color:var(--muted); border-bottom:1px solid var(--line)">
+              <tr>
+                <th class="text-left py-2 px-2" data-i18n="primeurs_th_week">Week</th>
+                <th class="text-left py-2 px-2" data-i18n="primeurs_th_date">Datum</th>
+                <th class="text-left py-2 px-2" data-i18n="primeurs_th_notering">Notering</th>
+              </tr>
+            </thead>
+            <tbody id="primeursTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Mobile sticky actions -->
   <div class="fixed bottom-3 inset-x-0 px-3 md:hidden no-print z-30">
     <div class="max-w-6xl mx-auto">
@@ -169,7 +209,7 @@
   </div>
 
   <script>
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycby_zfYJpESlUbzSwRno0DLRBT1ULWx0pZmEnhHj44MYbYOe43mM_NXmTqWOEsCczfBm/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbzCJ-5tZyGA_kpPzzZDfrEGIbjy0gd5x65glvG9GXI-xclvvSAxfMimdolOzOIQMrS-/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
@@ -192,7 +232,12 @@
       pdf_download:"Download PDF",
       no_quote_notice:"Geen notering wegens gebrek aan transacties",
       print_label:"Print",
-      season_label:"Seizoen"
+      season_label:"Seizoen",
+      primeurs_title:"Historiek primeurs",
+      primeurs_th_week:"Week",
+      primeurs_th_date:"Datum",
+      primeurs_th_notering:"Notering",
+      primeurs_no_data:"Geen primeursgegevens beschikbaar"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
       current_period_title:"Période actuelle",
@@ -212,7 +257,12 @@
       pdf_download:"Télécharger PDF",
       no_quote_notice:"Pas de cotation faute de transactions",
       print_label:"Imprimer",
-      season_label:"Saison"
+      season_label:"Saison",
+      primeurs_title:"Historique primeurs",
+      primeurs_th_week:"Semaine",
+      primeurs_th_date:"Date",
+      primeurs_th_notering:"Cotation",
+      primeurs_no_data:"Aucune donnée primeur disponible"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
       current_period_title:"Current period",
@@ -232,7 +282,12 @@
       pdf_download:"Download PDF",
       no_quote_notice:"No quotation due to lack of transactions",
       print_label:"Print",
-      season_label:"Season"
+      season_label:"Season",
+      primeurs_title:"Primeurs history",
+      primeurs_th_week:"Week",
+      primeurs_th_date:"Date",
+      primeurs_th_notering:"Quotation",
+      primeurs_no_data:"No primeurs data available"
     }
   };
   function applyI18N(){
@@ -245,6 +300,11 @@
     document.getElementById('rules_body').innerHTML=d.rules_body.map(p=>`<p class="mb-2">${p}</p>`).join('');
     document.getElementById('chartLoaderText').textContent=d.loading_chart;
     document.getElementById('tableLoaderText').textContent=d.loading_table;
+    // Primeurs loader texts if elements exist
+    const pcLt = document.getElementById('primeursChartLoaderText');
+    const ptLt = document.getElementById('primeursTableLoaderText');
+    if (pcLt) pcLt.textContent = d.loading_chart;
+    if (ptLt) ptLt.textContent = d.loading_table;
   }
 
   /* helpers */
@@ -260,6 +320,8 @@
 
   /* state */
   let chart, allRows=[], seasonRows=[], seasonStartYear, latestRow, contractKey='contract_price';
+  // primeur data state
+  let primeurRows=[], primeurYears=[], currentPrimeurYear, primeurChart;
   let currentRange='season'; // '2' | '4' | '8' | 'season'
 
   const showLoaders=()=>{
@@ -344,6 +406,104 @@
     seasonRows.forEach(r=>{ const w=r.week_num; if (r.friday_date) byWeekFri[w]=r.friday_date; const c=toNum(r[contractKey]); if(c!=null) byWeekC[w]=c; const q=toNum(r.notering); if(q!=null) byWeekQ[w]=q; if (r.marktstemming) byWeekS[w]=r.marktstemming; });
     order.forEach(w=>{ const tr=document.createElement('tr'); tr.className="border-b"; tr.style.borderColor="var(--line)"; tr.innerHTML=`<td class="py-2 px-2">W${String(w).padStart(2,'0')}</td><td class="py-2 px-2">${formatDateISO(byWeekFri[w])}</td><td class="py-2 px-2">${euro(byWeekC[w])}</td><td class="py-2 px-2">${euro(byWeekQ[w])}</td><td class="py-2 px-2">${byWeekS[w] || '–'}</td>`; tbody.appendChild(tr); });
     document.getElementById('tableSeason').textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
+  }
+
+  /* Primeur helpers */
+  function buildPrimeurSeries(rows){
+    const working = rows.sort((a,b)=> a.friday_date.localeCompare(b.friday_date));
+    const labels = working.map(r => r.week_label);
+    const quote = working.map(r => toNum(r.notering));
+    const vals = quote.filter(Number.isFinite);
+    let yMin=0,yMax=100,yStep=10;
+    if (vals.length){
+      const lo=Math.min(...vals), hi=Math.max(...vals), span=hi-lo, pad=Math.max(10,Math.round(span*0.12));
+      const nice=(sp)=>{ const t=Math.max(1,sp/6), p=10**Math.floor(Math.log10(t)), b=t/p; return (b<=1?1:b<=2?2:b<=5?5:10)*p; };
+      yStep=nice(span||10);
+      yMin=Math.max(0,Math.floor((lo-pad)/yStep)*yStep);
+      yMax=Math.ceil((hi+pad)/yStep)*yStep;
+      if(yMax<=yMin) yMax=yMin+yStep;
+    }
+    return { labels, quote, yMin, yMax, yStep };
+  }
+
+  function renderPrimeursChart(){
+    const chartEl = document.getElementById('primeursChart');
+    if (!chartEl) return;
+    const rowsForYear = primeurRows.filter(r => {
+      const year = (new Date(r.date+'T00:00:00')).getFullYear();
+      return year === currentPrimeurYear;
+    });
+    const { labels, quote, yMin, yMax, yStep } = buildPrimeurSeries(rowsForYear);
+    const ctx = chartEl.getContext('2d');
+    if(primeurChart) primeurChart.destroy();
+    primeurChart = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          label: LANG==='fr'?"Cotation primeur (€/t)":LANG==='en'?"Primeur quotation (€/t)":"Notering primeur (€/t)",
+          data: quote,
+          borderWidth:3,
+          pointRadius:3.5,
+          tension:0.2,
+          borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-quote').trim(),
+          backgroundColor:'transparent',
+          spanGaps:false
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, boxHeight:12, usePointStyle:true } }, tooltip:{ callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
+        scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:(window.innerWidth<640?6:14) }, grid:{ display:false } }, y:{ min:yMin, max:yMax, ticks:{ stepSize:yStep, callback:v=>`${v} €` }, grid:{ color:'rgba(0,0,0,0.06)' } } }
+      }
+    });
+    // hide chart loader
+    const cl = document.getElementById('primeursChartLoader');
+    if (cl) cl.classList.add('loading-hidden');
+  }
+
+  function renderPrimeursTable(){
+    const tbody = document.getElementById('primeursTbody');
+    if (!tbody) return;
+    tbody.innerHTML='';
+    const rowsForYear = primeurRows.filter(r => {
+      const year = (new Date(r.date+'T00:00:00')).getFullYear();
+      return year === currentPrimeurYear;
+    });
+    // Sort by friday_date ascending
+    rowsForYear.sort((a,b)=> a.friday_date.localeCompare(b.friday_date));
+    rowsForYear.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b';
+      tr.style.borderColor = 'var(--line)';
+      tr.innerHTML = `<td class="py-2 px-2">${r.week_label}</td><td class="py-2 px-2">${formatDateISO(r.friday_date)}</td><td class="py-2 px-2">${euro(toNum(r.notering))}</td>`;
+      tbody.appendChild(tr);
+    });
+    // hide table loader
+    const tl = document.getElementById('primeursTableLoader');
+    if (tl) tl.classList.add('loading-hidden');
+    // If no rows, show message
+    if (rowsForYear.length === 0) {
+      const d = T[LANG];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="3" class="py-2 px-2 text-center">${d.primeurs_no_data || 'Geen primeursgegevens'}</td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function updatePrimeur(year){
+    currentPrimeurYear = year;
+    // update active tab appearance
+    const tabs = document.getElementById('primeurTabs');
+    if (tabs) {
+      Array.from(tabs.children).forEach(btn => {
+        if (String(btn.getAttribute('data-year')) === String(year)) btn.classList.add('btn-active');
+        else btn.classList.remove('btn-active');
+      });
+    }
+    renderPrimeursChart();
+    renderPrimeursTable();
   }
 
   async function makePDF(){ const { jsPDF } = window.jspdf; const doc=new jsPDF({ unit:'pt', format:'a4' }); const root=document.getElementById('contentRoot'); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(17,24,39); doc.text(document.getElementById('title').textContent, 40, 40); doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80); doc.text(document.getElementById('subtitle').textContent, 40, 58); const chartCard=root.querySelector('section > div'); const tableCard=root.querySelector('aside > div:nth-child(2)'); const pad=24; let y=80; async function addBlock(el){ const canvas=await html2canvas(el,{ scale:2, backgroundColor:null }); const img=canvas.toDataURL('imagePNG'); const pageW=doc.internal.pageSize.getWidth(); const maxW=pageW-2*40; const ratio=canvas.width/canvas.height; const w=Math.min(maxW, canvas.width); const h=w/ratio; if(y+h>doc.internal.pageSize.getHeight()-40){ doc.addPage(); y=40;} doc.addImage(img,'PNG',40,y,w,h,undefined,'FAST'); y+=h+pad; } await addBlock(chartCard); await addBlock(tableCard); const fname=`belgapom-notering_${new Date().toISOString().slice(0,10)}.pdf`; doc.save(fname); }
@@ -445,15 +605,23 @@
         if (!seasons.includes(start)) seasons.push(start);
       });
       seasons.sort((a,b) => b - a);
+      // Filter seasons to only include relevant start years (24-25 and 25-26)
+      const allowedSeasons = seasons.filter(y => y >= 2024 && y <= 2025);
       const sel = document.getElementById('seasonSelect');
       sel.innerHTML='';
-      seasons.forEach(y => {
+      allowedSeasons.forEach(y => {
         const opt = document.createElement('option');
         opt.value = y;
         opt.textContent = `W36 ${y} – W36 ${y + 1}`;
         sel.appendChild(opt);
       });
       // default select
+      // Ensure default season is within allowed range
+      if (!allowedSeasons.includes(seasonStartYear)) {
+        if (allowedSeasons.length > 0) {
+          seasonStartYear = allowedSeasons[0];
+        }
+      }
       sel.value = seasonStartYear;
 
       function updateSeason(){
@@ -467,15 +635,7 @@
           const d = new Date((r.friday_date || r.date) + 'T00:00:00');
           return d >= startDate && d <= endDate;
         });
-        // latest row for KPI: last row within this season that has a price or notering; fallback to last row
-        let lr = null;
-        for (let i = seasonRows.length - 1; i >= 0; i--) {
-          const r = seasonRows[i];
-          if (r.notering != null || r[contractKey] != null) { lr = r; break; }
-        }
-        latestRow = lr || seasonRows[seasonRows.length - 1] || latestRow;
         document.getElementById('seasonLabel').textContent = `W36 ${y} – W36 ${y + 1}`;
-        renderKPI();
         renderChart();
         renderTable();
       }
@@ -493,9 +653,9 @@
       const cutoffIso = (data.meta && data.meta.latest_cutoff_friday_iso) ? data.meta.latest_cutoff_friday_iso : (()=>{ const nowBE=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'})); const dow=nowBE.getDay(); const dsf=(dow>=5)?(dow-5):(dow+2); const lf=new Date(nowBE); lf.setDate(nowBE.getDate()-dsf); return lf.toISOString().slice(0,10); })();
       const cutoffDateObj = new Date(cutoffIso+'T00:00:00');
       const target = isoWeekMetaJS(cutoffDateObj);
-      let lr = seasonRows.find(r => r.week_num===target.week && r.week_year===target.year);
-      if (!lr) lr = { week_num: target.week, week_year: target.year, friday_date: cutoffIso, notering: null, contract_price: null, marktstemming: '' };
-      latestRow = lr;
+      let lrOverall = allRows.find(r => r.week_num===target.week && r.week_year===target.year);
+      if (!lrOverall) lrOverall = { week_num: target.week, week_year: target.year, friday_date: cutoffIso, notering: null, contract_price: null, marktstemming: '' };
+      latestRow = lrOverall;
 
       // update season label
       document.getElementById('seasonLabel').textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
@@ -503,6 +663,36 @@
       renderKPI();
       renderChart();
       renderTable();
+
+      // Primeur data initialisation
+      try{
+        primeurRows = allRows.filter(r => r.is_primeur);
+        // Determine primeur years based on calendar year of date
+        primeurYears = Array.from(new Set(primeurRows.map(r => (new Date(r.date+'T00:00:00')).getFullYear()))).sort((a,b) => b - a);
+        const primeSection = document.getElementById('primeursSection');
+        if (primeurYears.length > 0 && primeSection) {
+          primeSection.style.display = '';
+          const tabsDiv = document.getElementById('primeurTabs');
+          tabsDiv.innerHTML = '';
+          primeurYears.forEach((y, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn' + (idx===0 ? ' btn-active' : '');
+            btn.textContent = y;
+            btn.setAttribute('data-year', y);
+            btn.onclick = () => updatePrimeur(y);
+            tabsDiv.appendChild(btn);
+          });
+          currentPrimeurYear = primeurYears[0];
+          updatePrimeur(currentPrimeurYear);
+        } else if (primeSection) {
+          // hide section if no data
+          primeSection.style.display = 'none';
+        }
+      } catch (ex) {
+        // hide primeur section on error
+        const primeSection = document.getElementById('primeursSection');
+        if (primeSection) primeSection.style.display = 'none';
+      }
 
       hideLoaders();
     }catch(err){
