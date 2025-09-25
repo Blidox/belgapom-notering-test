@@ -209,7 +209,7 @@
   </div>
 
   <script>
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbzCJ-5tZyGA_kpPzzZDfrEGIbjy0gd5x65glvG9GXI-xclvvSAxfMimdolOzOIQMrS-/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxsSmKHsfraeeg2gDczZEjbQVvwyUQR-Mb445OU-cc9sYBOVl5wXf7ZIOXkMswkiD_m/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
@@ -403,7 +403,16 @@
     const tbody=document.getElementById('tbody'); tbody.innerHTML='';
     const order=[...Array(17)].map((_,i)=>36+i).concat([...Array(36)].map((_,i)=>i+1));
     const byWeekC={}, byWeekQ={}, byWeekS={}, byWeekFri={};
-    seasonRows.forEach(r=>{ const w=r.week_num; if (r.friday_date) byWeekFri[w]=r.friday_date; const c=toNum(r[contractKey]); if(c!=null) byWeekC[w]=c; const q=toNum(r.notering); if(q!=null) byWeekQ[w]=q; if (r.marktstemming) byWeekS[w]=r.marktstemming; });
+    seasonRows.forEach(r=>{
+      const w = r.week_num;
+      // Voor elke week nemen we de eerste (oudste) waarde binnen het seizoen.
+      if (r.friday_date && byWeekFri[w] === undefined) byWeekFri[w] = r.friday_date;
+      const c = toNum(r[contractKey]);
+      if (c != null && byWeekC[w] === undefined) byWeekC[w] = c;
+      const q = toNum(r.notering);
+      if (q != null && byWeekQ[w] === undefined) byWeekQ[w] = q;
+      if (r.marktstemming && byWeekS[w] === undefined) byWeekS[w] = r.marktstemming;
+    });
     order.forEach(w=>{ const tr=document.createElement('tr'); tr.className="border-b"; tr.style.borderColor="var(--line)"; tr.innerHTML=`<td class="py-2 px-2">W${String(w).padStart(2,'0')}</td><td class="py-2 px-2">${formatDateISO(byWeekFri[w])}</td><td class="py-2 px-2">${euro(byWeekC[w])}</td><td class="py-2 px-2">${euro(byWeekQ[w])}</td><td class="py-2 px-2">${byWeekS[w] || '–'}</td>`; tbody.appendChild(tr); });
     document.getElementById('tableSeason').textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
   }
