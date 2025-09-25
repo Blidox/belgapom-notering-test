@@ -2,9 +2,8 @@
 <html lang="nl">
 <head>
   <meta charset="utf-8" />
-<link rel="icon" type="image/svg+xml" href="assets/Asset%201.svg">
+  <link rel="icon" type="image/svg+xml" href="assets/Asset%201.svg">
 
-  
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Belgapom – Notering / Cotation / Quotation</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -66,12 +65,17 @@
     <section class="md:col-span-2 space-y-4">
       <div class="rounded-2xl shadow-sm" style="background:var(--card); border:1px solid var(--line);">
         <!-- Head -->
-        <div class="p-3 md:p-4 flex items-center justify-between gap-3 border-b" style="border-color:var(--line)">
-          <div>
-            <h2 class="text-base md:text-lg font-semibold" data-i18n="current period_title">Huidige periode</h2>
+        <div class="p-3 md:p-4 flex items-start md:items-center justify-between gap-3 border-b flex-wrap" style="border-color:var(--line)">
+          <div class="flex flex-col">
+            <h2 class="text-base md:text-lg font-semibold" data-i18n="current_period_title">Huidige periode</h2>
+            <!-- Selected season label -->
             <div id="seasonLabel" class="text-xs md:text-sm" style="color:var(--muted)"></div>
           </div>
-          <!-- De bereik-selectie is verwijderd; het seizoen wordt nu altijd volledig weergegeven -->
+          <!-- Season selector -->
+          <div class="flex items-center gap-1 text-xs md:text-sm">
+            <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap">Seizoen:</label>
+            <select id="seasonSelect" class="border rounded px-1 py-0.5 text-xs md:text-sm"></select>
+          </div>
         </div>
 
         <!-- KPI’s -->
@@ -165,13 +169,13 @@
   </div>
 
   <script>
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbz1WY42XgvtzGTd2MV2EE7CQFEbibuirg-ksVoYZo6metlSuaS4eL9MmMn0AXTVSV44/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycby_zfYJpESlUbzSwRno0DLRBT1ULWx0pZmEnhHj44MYbYOe43mM_NXmTqWOEsCczfBm/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
   const T = {
     nl:{ title:"Belgapom – Notering", subtitle:"Contractprijzen en wekelijkse notering (vrije aardappelen)",
-      current period_title:"Huidige Periode",
+      current_period_title:"Huidige periode",
       kpi_quote:"Notering", kpi_week:"Week", kpi_date:"Datum", kpi_sentiment:"Marktstemming",
       last_update_label:"Laatste update", source:"Bron: interne rapportering",
       table_title:"Overzicht per week", th_week:"Week", th_date:"Datum (vr)", th_contract:"Contract", th_quote:"Notering", th_sent:"Stemming",
@@ -184,13 +188,14 @@
         "Daarnaast maken telers, handel en verwerking in toenemende mate gebruik van teeltcontracten, die grotere prijsstabiliteit beogen. De verhouding verschilt per bedrijf; beide componenten zijn relevant om de grondstofprijs te volgen.",
         "Daarom toont de grafiek naast de notering ook de evolutie van contractprijzen."
       ],
-      loading_chart:"Data laden…", loading_table:"Tabel laden…", loading_error:"Kon data niet laden: "
-      ,pdf_download:"Download PDF"
-      ,no_quote_notice:"Geen notering wegens gebrek aan transacties"
-      ,print_label:"Print"
+      loading_chart:"Data laden…", loading_table:"Tabel laden…", loading_error:"Kon data niet laden: ",
+      pdf_download:"Download PDF",
+      no_quote_notice:"Geen notering wegens gebrek aan transacties",
+      print_label:"Print",
+      season_label:"Seizoen"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
-      current period_title:"période actuelle",
+      current_period_title:"Période actuelle",
       kpi_quote:"Cotation", kpi_week:"Semaine", kpi_date:"Date", kpi_sentiment:"Tendance du marché",
       last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
       table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation", th_sent:"Ambiance",
@@ -203,13 +208,14 @@
         "Parallèlement, producteurs, commerce et industrie recourent de plus en plus aux contrats de culture afin de stabiliser le prix de la matière première.",
         "C’est pourquoi le graphique affiche également l’évolution des prix contractuels."
       ],
-      loading_chart:"Chargement des données…", loading_table:"Chargement du tableau…", loading_error:"Impossible de charger les données : "
-      ,pdf_download:"Télécharger PDF"
-      ,no_quote_notice:"Pas de cotation faute de transactions"
-      ,print_label:"Imprimer"
+      loading_chart:"Chargement des données…", loading_table:"Chargement du tableau…", loading_error:"Impossible de charger les données : ",
+      pdf_download:"Télécharger PDF",
+      no_quote_notice:"Pas de cotation faute de transactions",
+      print_label:"Imprimer",
+      season_label:"Saison"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
-      current period_title:"current period",
+      current_period_title:"Current period",
       kpi_quote:"Quotation", kpi_week:"Week", kpi_date:"Date", kpi_sentiment:"Market sentiment",
       last_update_label:"Last update", source:"Source: internal reporting",
       table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation", th_sent:"Sentiment",
@@ -222,10 +228,11 @@
         "Growers, traders and processors increasingly use production contracts to stabilise raw-material prices.",
         "Therefore, the chart shows contract price evolution alongside the weekly quotation."
       ],
-      loading_chart:"Loading data…", loading_table:"Loading table…", loading_error:"Could not load data: "
-      ,pdf_download:"Download PDF"
-      ,no_quote_notice:"No quotation due to lack of transactions"
-      ,print_label:"Print"
+      loading_chart:"Loading data…", loading_table:"Loading table…", loading_error:"Could not load data: ",
+      pdf_download:"Download PDF",
+      no_quote_notice:"No quotation due to lack of transactions",
+      print_label:"Print",
+      season_label:"Season"
     }
   };
   function applyI18N(){
@@ -311,11 +318,11 @@
       data:{
         labels,
         datasets:[
-          { label: LANG==='fr'?'Prix contractuel (€/t)':LANG==='en'?'Contract price (€/t)':'Contractprijs (€/t)',
+          { label: LANG==='fr'?"Prix contractuel (€/t)":LANG==='en'?"Contract price (€/t)":"Contractprijs (€/t)",
             data: contract, borderWidth:3, pointRadius:3.5, tension:0, stepped:true,
             borderColor:getComputedStyle(document.documentElement).getPropertyValue('--brand-neutral').trim(),
             backgroundColor:'transparent', spanGaps:false },
-          { label: LANG==='fr'?'Cotation (€/t)':LANG==='en'?'Quotation (€/t)':'Notering (€/t)',
+          { label: LANG==='fr'?"Cotation (€/t)":LANG==='en'?"Quotation (€/t)":"Notering (€/t)",
             data: quote, borderWidth:3, pointRadius:3.5, tension:0.2,
             borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-quote').trim(),
             backgroundColor:'transparent', spanGaps:false }
@@ -402,6 +409,9 @@
 
   async function fetchJSON(u){ const r=await fetch(u,{cache:'no-store'}); const t=await r.text(); if(!t) throw new Error('Lege respons'); if(t.trim().startsWith('<')) throw new Error('HTML i.p.v. JSON'); return JSON.parse(t); }
 
+  // helper to compute Monday start of ISO week
+  function isoWeekStart(year, week){ const simple=new Date(year,0,1+(week-1)*7); let dow=simple.getDay(); if(dow===0) dow=7; const mon=new Date(simple); mon.setDate(simple.getDate()-dow+1); return new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()); }
+
   (async function init(){
     applyI18N();
 
@@ -416,8 +426,6 @@
     document.getElementById('btn-pdf').onclick=makePDFImproved;
     document.getElementById('m-pdf').onclick=makePDFImproved;
 
-    // Bereik-selectie is verwijderd; het seizoen wordt altijd volledig getoond
-
     try{
       const data=await fetchJSON(APP_SCRIPT_JSON_URL);
       const rows = Array.isArray(data.rows) ? data.rows : [];
@@ -430,32 +438,77 @@
       const suggested = data.meta && data.meta.suggested_season_start_year;
       seasonStartYear = suggested ?? (last.week_num>=36 ? last.week_year : last.week_year-1);
 
-      function isoWeekStart(y,w){ const simple=new Date(y,0,1+(w-1)*7); let dow=simple.getDay(); if(dow===0) dow=7; const mon=new Date(simple); mon.setDate(simple.getDate()-dow+1); return new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()); }
-      const start = isoWeekStart(seasonStartYear,36);
-      const endMon = isoWeekStart(seasonStartYear+1,36); const end = new Date(endMon); end.setDate(endMon.getDate()+6);
-      seasonRows = allRows.filter(r=>{ const d=new Date((r.friday_date||r.date)+'T00:00:00'); return d>=start && d<=end; });
+      // compute seasons (start years) available in data
+      const seasons = [];
+      allRows.forEach(r => {
+        const start = (r.week_num >= 36) ? r.week_year : (r.week_year - 1);
+        if (!seasons.includes(start)) seasons.push(start);
+      });
+      seasons.sort((a,b) => b - a);
+      const sel = document.getElementById('seasonSelect');
+      sel.innerHTML='';
+      seasons.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = `W36 ${y} – W36 ${y + 1}`;
+        sel.appendChild(opt);
+      });
+      // default select
+      sel.value = seasonStartYear;
 
+      function updateSeason(){
+        const y = parseInt(sel.value, 10);
+        seasonStartYear = y;
+        const startDate = isoWeekStart(y, 36);
+        const endMon = isoWeekStart(y + 1, 36);
+        const endDate = new Date(endMon);
+        endDate.setDate(endMon.getDate() + 6);
+        seasonRows = allRows.filter(r => {
+          const d = new Date((r.friday_date || r.date) + 'T00:00:00');
+          return d >= startDate && d <= endDate;
+        });
+        // latest row for KPI: last row within this season that has a price or notering; fallback to last row
+        let lr = null;
+        for (let i = seasonRows.length - 1; i >= 0; i--) {
+          const r = seasonRows[i];
+          if (r.notering != null || r[contractKey] != null) { lr = r; break; }
+        }
+        latestRow = lr || seasonRows[seasonRows.length - 1] || latestRow;
+        document.getElementById('seasonLabel').textContent = `W36 ${y} – W36 ${y + 1}`;
+        renderKPI();
+        renderChart();
+        renderTable();
+      }
+      // populate initial season rows
+      sel.onchange = updateSeason;
+
+      // initial filter for default season
+      const startDate = isoWeekStart(seasonStartYear,36);
+      const endMon = isoWeekStart(seasonStartYear+1,36);
+      const endDate = new Date(endMon);
+      endDate.setDate(endMon.getDate()+6);
+      seasonRows = allRows.filter(r=>{ const d=new Date((r.friday_date||r.date)+'T00:00:00'); return d>=startDate && d<=endDate; });
+
+      // Determine latest row across all seasons for default (cutoff or fallback)
       const cutoffIso = (data.meta && data.meta.latest_cutoff_friday_iso) ? data.meta.latest_cutoff_friday_iso : (()=>{ const nowBE=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'})); const dow=nowBE.getDay(); const dsf=(dow>=5)?(dow-5):(dow+2); const lf=new Date(nowBE); lf.setDate(nowBE.getDate()-dsf); return lf.toISOString().slice(0,10); })();
       const cutoffDateObj = new Date(cutoffIso+'T00:00:00');
       const target = isoWeekMetaJS(cutoffDateObj);
-
       let lr = seasonRows.find(r => r.week_num===target.week && r.week_year===target.year);
       if (!lr) lr = { week_num: target.week, week_year: target.year, friday_date: cutoffIso, notering: null, contract_price: null, marktstemming: '' };
       latestRow = lr;
 
+      // update season label
       document.getElementById('seasonLabel').textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
 
       renderKPI();
       renderChart();
       renderTable();
 
-      // hide loaders once everything has been rendered
       hideLoaders();
     }catch(err){
       const d=T[LANG]||T.nl;
       document.getElementById('chartLoaderText').textContent = (d.loading_error||'Kon data niet laden: ')+err.message;
       document.getElementById('tableLoaderText').textContent  = (d.loading_error||'Kon data niet laden: ')+err.message;
-      // Always hide loaders on error so the user sees the message
       hideLoaders();
     }
   })();
