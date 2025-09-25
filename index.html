@@ -68,7 +68,7 @@
         <!-- Head -->
         <div class="p-3 md:p-4 flex items-center justify-between gap-3 border-b" style="border-color:var(--line)">
           <div>
-            <h2 class="text-base md:text-lg font-semibold" data-i18n="history_title">Historiek</h2>
+            <h2 class="text-base md:text-lg font-semibold" data-i18n="current period_title">Huidige periode</h2>
             <div id="seasonLabel" class="text-xs md:text-sm" style="color:var(--muted)"></div>
           </div>
           <!-- De bereik-selectie is verwijderd; het seizoen wordt nu altijd volledig weergegeven -->
@@ -171,7 +171,7 @@
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
   const T = {
     nl:{ title:"Belgapom – Notering", subtitle:"Contractprijzen en wekelijkse notering (vrije aardappelen)",
-      history_title:"Historiek",
+      current period_title:"Huidige Periode",
       kpi_quote:"Notering", kpi_week:"Week", kpi_date:"Datum", kpi_sentiment:"Marktstemming",
       last_update_label:"Laatste update", source:"Bron: interne rapportering",
       table_title:"Overzicht per week", th_week:"Week", th_date:"Datum (vr)", th_contract:"Contract", th_quote:"Notering", th_sent:"Stemming",
@@ -190,7 +190,7 @@
       ,print_label:"Print"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
-      history_title:"Historique",
+      current period_title:"période actuelle",
       kpi_quote:"Cotation", kpi_week:"Semaine", kpi_date:"Date", kpi_sentiment:"Tendance du marché",
       last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
       table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation", th_sent:"Ambiance",
@@ -209,7 +209,7 @@
       ,print_label:"Imprimer"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
-      history_title:"History",
+      current period_title:"current period",
       kpi_quote:"Quotation", kpi_week:"Week", kpi_date:"Date", kpi_sentiment:"Market sentiment",
       last_update_label:"Last update", source:"Source: internal reporting",
       table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation", th_sent:"Sentiment",
