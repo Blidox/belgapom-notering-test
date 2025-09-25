@@ -7,15 +7,9 @@
   <title>Belgapom – Notering / Cotation / Quotation</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <style>
-    :root{
-      --brand-primary:#FFCA00;
-      --brand-neutral:#3f3f3f;
-      --accent-quote:#2aa36b;
-      --bg:#f7f7f8; --ink:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb;
-    }
+    :root{ --brand-primary:#FFCA00; --brand-neutral:#3f3f3f; --accent-quote:#2aa36b;
+           --bg:#f7f7f8; --ink:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb; }
     html,body{ background:var(--bg); color:var(--ink); }
     .btn{ padding:.55rem .8rem; border-radius:0.75rem; border:1px solid var(--line); background:var(--card); font-size:.95rem }
     .btn-active{ background:var(--brand-primary); color:#1a1a1a; border-color:transparent; font-weight:700; }
@@ -46,8 +40,6 @@
         <button id="btn-nl" class="btn">NL</button>
         <button id="btn-fr" class="btn">FR</button>
         <button id="btn-en" class="btn">EN</button>
-        <button id="btn-print" class="btn hidden md:inline-flex" data-i18n="print_label">Print</button>
-        <button id="btn-pdf" class="btn hidden md:inline-flex" style="background:var(--brand-primary);border-color:transparent;color:#1a1a1a" data-i18n="pdf_download">Download PDF</button>
       </div>
     </div>
   </header>
@@ -81,7 +73,6 @@
 
         <!-- Season selector + Chart -->
         <div class="relative h-[340px] md:h-[440px] px-2 pb-2" id="chartWrap">
-          <!-- Seizoenselectie boven grafiek -->
           <div class="flex items-center gap-2 text-xs md:text-sm mb-2">
             <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap">Seizoen:</label>
             <select id="seasonSelect" class="border rounded px-2 py-1"></select>
@@ -137,7 +128,6 @@
                 <th class="text-left py-2 px-2" data-i18n="th_date">Datum (vr)</th>
                 <th class="text-left py-2 px-2" data-i18n="th_contract">Contract</th>
                 <th class="text-left py-2 px-2" data-i18n="th_quote">Notering</th>
-                <th class="text-left py-2 px-2" data-i18n="th_sent">Stemming</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -147,22 +137,16 @@
     </aside>
   </main>
 
-  <!-- PRIMEURS (alleen tabel, met tabs per jaar) -->
+  <!-- PRIMEURS (TABBLADEN + TABEL, geen grafiek) -->
   <section class="max-w-6xl mx-auto px-3 md:px-4 pb-8" id="primeursSection" style="display:none">
     <div class="rounded-2xl shadow-sm" style="background:var(--card); border:1px solid var(--line);">
       <div class="p-3 md:p-4 border-b" style="border-color:var(--line)">
         <h3 class="font-semibold text-base md:text-lg" data-i18n="primeurs_title">Historiek primeurs</h3>
-        <p class="text-xs md:text-sm mt-1" style="color:var(--muted)">
-          <span data-i18n="primeurs_hint">Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.</span>
-        </p>
+        <p class="text-xs md:text-sm mt-1" style="color:var(--muted)"><span data-i18n="primeurs_hint">Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.</span></p>
       </div>
-
-      <!-- Tabs -->
       <div class="p-3 md:p-4 border-b" style="border-color:var(--line)">
         <div id="primeurTabs" class="flex flex-wrap gap-2"></div>
       </div>
-
-      <!-- Content: alleen TABEL -->
       <div class="p-3 md:p-4">
         <div class="relative max-h-[360px] md:max-h-[520px] overflow-auto rounded-lg ring-1" style="--tw-ring-color:var(--line)">
           <div id="primeursTableLoader" class="loading-overlay loading-hidden">
@@ -186,19 +170,9 @@
     </div>
   </section>
 
-  <!-- Mobile sticky actions -->
-  <div class="fixed bottom-3 inset-x-0 px-3 md:hidden no-print z-30">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex gap-2 p-2 rounded-2xl shadow-lg" style="background:var(--card); border:1px solid var(--line)">
-        <button id="m-print" class="flex-1 btn" data-i18n="print_label">Print</button>
-        <button id="m-pdf" class="flex-1 btn-active" data-i18n="pdf_download">Download PDF</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-  /* VERVANG DIT DOOR JE EIGEN EXEC-URL */
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbwwbZSeM_9eQxzeHk2b2INFOoVpFaOdebe53eJqSYSV0pQBKocuyTu63tdb7Kgrmi_8/exec?mode=json";
+  /* >>> VERVANG door jouw exec-URL */
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbz723Fzq9rDxCASKF8w0kaZ-an-4uE_A_roCm_7wCkkISb1dSpo13OydpGx3NBA4kgM/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
@@ -207,7 +181,7 @@
       current_period_title:"Huidige periode",
       kpi_quote:"Notering", kpi_week:"Week", kpi_date:"Datum", kpi_sentiment:"Marktstemming",
       last_update_label:"Laatste update", source:"Bron: interne rapportering",
-      table_title:"Overzicht per week", th_week:"Week", th_date:"Datum (vr)", th_contract:"Contract", th_quote:"Notering", th_sent:"Stemming",
+      table_title:"Overzicht per week", th_week:"Week", th_date:"Datum (vr)", th_contract:"Contract", th_quote:"Notering",
       legend_title:"Legende marktstemming",
       legend_items:["Flauw — aanbod is groter dan de vraag","Rustig — aanbod is groter dan of gelijk aan de vraag","Stabiel — aanbod is gelijk aan de vraag (evenwicht)","Prijshoudend — aanbod is kleiner dan of gelijk aan de vraag","Vast — aanbod is kleiner dan de vraag"],
       rules_title:"Reglementering & toelichting",
@@ -218,69 +192,57 @@
         "Daarom toont de grafiek naast de notering ook de evolutie van contractprijzen."
       ],
       loading_chart:"Data laden…", loading_table:"Tabel laden…", loading_error:"Kon data niet laden: ",
-      pdf_download:"Download PDF", no_quote_notice:"Geen notering wegens gebrek aan transacties", print_label:"Print",
+      no_quote_notice:"Geen notering wegens gebrek aan transacties",
       season_label:"Seizoen",
       primeurs_title:"Historiek primeurs",
       primeurs_hint:"Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.",
-      primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering",
-      no_primeurs:"Geen primeursdata beschikbaar."
+      primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
       current_period_title:"Période actuelle",
       kpi_quote:"Cotation", kpi_week:"Semaine", kpi_date:"Date", kpi_sentiment:"Tendance du marché",
       last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
-      table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation", th_sent:"Ambiance",
+      table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation",
       legend_title:"Légende – tendance du marché",
-      legend_items:["Faible — l'offre est supérieure à la demande","Calme — l'offre ≥ la demande","Stable — l'offre = la demande","Soutenu — l'offre ≤ la demande","Ferme — l'offre < la demande"],
+      legend_items:["Faible","Calme","Stable","Soutenu","Ferme"],
       rules_title:"Réglementation & explications",
-      rules_body:[
-        "Marché libre et contrats dans le secteur belge des frites surgelées.",
-        "La cotation pour pommes de terre précoces (juillet–août) et Fontane/Challenger indique l’évolution du marché libre.",
-        "Les contrats offrent de la stabilité de prix.",
-        "Le graphique montre l’évolution des prix contractuels."
-      ],
+      rules_body:["…","…","…","…"],
       loading_chart:"Chargement des données…", loading_table:"Chargement du tableau…", loading_error:"Impossible de charger les données : ",
-      pdf_download:"Télécharger PDF", no_quote_notice:"Pas de cotation faute de transactions", print_label:"Imprimer",
+      no_quote_notice:"Pas de cotation faute de transactions",
       season_label:"Saison",
       primeurs_title:"Historique primeurs",
-      primeurs_hint:"Période du 15 juillet au 15 septembre; uniquement la cotation (pas de contrats). Valeur vide = pas de cotation (faute de transactions).",
-      primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation",
-      no_primeurs:"Aucune donnée primeurs disponible."
+      primeurs_hint:"Période 15 juillet – 15 septembre; uniquement cotation. Valeur vide = pas de cotation (faute de transactions).",
+      primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
       current_period_title:"Current period",
       kpi_quote:"Quotation", kpi_week:"Week", kpi_date:"Date", kpi_sentiment:"Market sentiment",
       last_update_label:"Last update", source:"Source: internal reporting",
-      table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation", th_sent:"Sentiment",
+      table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation",
       legend_title:"Legend – market sentiment",
-      legend_items:["Weak — supply exceeds demand","Calm — supply ≥ demand","Stable — supply = demand","Supported — supply ≤ demand","Firm — supply < demand"],
+      legend_items:["Weak","Calm","Stable","Supported","Firm"],
       rules_title:"Regulation & explanation",
-      rules_body:[
-        "Free market and contracts in the Belgian frozen-fries sector.",
-        "Weekly quotation for early potatoes (July–August) and Fontane/Challenger indicates free-market dynamics.",
-        "Contracts are used for price stability.",
-        "Chart shows contract price evolution alongside the quotation."
-      ],
+      rules_body:["…","…","…","…"],
       loading_chart:"Loading data…", loading_table:"Loading table…", loading_error:"Could not load data: ",
-      pdf_download:"Download PDF", no_quote_notice:"No quotation due to lack of transactions", print_label:"Print",
+      no_quote_notice:"No quotation due to lack of transactions",
       season_label:"Season",
       primeurs_title:"Early potatoes – history",
-      primeurs_hint:"Period 15 July – 15 September; quotation only (no contract prices). Empty value = no quotation due to lack of transactions.",
-      primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation",
-      no_primeurs:"No early-potatoes data available."
+      primeurs_hint:"15 July – 15 September; quotation only. Empty value = no quotation (lack of transactions).",
+      primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation"
     }
   };
   function applyI18N(){
     const d=T[LANG];
     document.getElementById('title').textContent=d.title;
     document.getElementById('subtitle').textContent=d.subtitle;
-    document.querySelectorAll('[data-i18n]').forEach(el=>{ const k=el.getAttribute('data-i18n'); if(d[k]) el.textContent=d[k]; });
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const k=el.getAttribute('data-i18n'); if(d[k]) el.textContent=d[k];
+    });
     const ul=document.getElementById('legend_list'); ul.innerHTML='';
     d.legend_items.forEach(txt=>{ const li=document.createElement('li'); li.innerHTML=txt.replace(/^([^—-]+)/,'<strong>$1</strong>'); ul.appendChild(li); });
     document.getElementById('rules_body').innerHTML=d.rules_body.map(p=>`<p class="mb-2">${p}</p>`).join('');
     const cl=document.getElementById('chartLoaderText'); if(cl) cl.textContent=d.loading_chart;
     const tl=document.getElementById('tableLoaderText'); if(tl) tl.textContent=d.loading_table;
-    const ptl=document.getElementById('primeursTableLoaderText'); if(ptl) ptl.textContent=d.loading_table;
   }
 
   /* helpers */
@@ -366,37 +328,30 @@
     });
   }
 
+  // Tabel: chronologisch (lost W36-bugs op) en zonder “Stemming”
   function renderTable(){
-    const tbody=document.getElementById('tbody'); tbody.innerHTML='';
-    const order=[...Array(17)].map((_,i)=>36+i).concat([...Array(36)].map((_,i)=>i+1));
-    const byWeekC={}, byWeekQ={}, byWeekS={}, byWeekFri={};
-    // Neem voor elke week de EERSTE waarde (niet overschrijven door later jaar)
-    seasonRows.forEach(r=>{
-      const w=r.week_num;
-      if (byWeekFri[w]===undefined && r.friday_date) byWeekFri[w]=r.friday_date;
-      const c=toNum(r[contractKey]); if(byWeekC[w]===undefined && c!=null) byWeekC[w]=c;
-      const q=toNum(r.notering);     if(byWeekQ[w]===undefined && q!=null) byWeekQ[w]=q;
-      if (byWeekS[w]===undefined && r.marktstemming) byWeekS[w]=r.marktstemming;
-    });
-    order.forEach(w=>{
-      const tr=document.createElement('tr'); tr.className="border-b"; tr.style.borderColor="var(--line)";
-      tr.innerHTML=`<td class="py-2 px-2">W${String(w).padStart(2,'0')}</td>
-        <td class="py-2 px-2">${formatDateISO(byWeekFri[w])}</td>
-        <td class="py-2 px-2">${euro(byWeekC[w])}</td>
-        <td class="py-2 px-2">${euro(byWeekQ[w])}</td>
-        <td class="py-2 px-2">${byWeekS[w] || '–'}</td>`;
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    const rows = [...seasonRows].sort((a,b)=> String(a.friday_date||a.date).localeCompare(String(b.friday_date||b.date)));
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      tr.className = "border-b";
+      tr.style.borderColor = "var(--line)";
+      tr.innerHTML = `
+        <td class="py-2 px-2">W${String(r.week_num).padStart(2,'0')}</td>
+        <td class="py-2 px-2">${formatDateISO(r.friday_date || r.date)}</td>
+        <td class="py-2 px-2">${euro(toNum(r[contractKey]))}</td>
+        <td class="py-2 px-2">${euro(toNum(r.notering))}</td>
+      `;
       tbody.appendChild(tr);
     });
     document.getElementById('tableSeason').textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
   }
 
-  /* PRIMEURS – Alleen tabel met tabs per jaar */
+  // PRIMEURS (tabs + tabel)
   function renderPrimeursTabs(){
     const cont=document.getElementById('primeurTabs'); cont.innerHTML='';
-    if(!primeurYears.length){
-      document.getElementById('primeursSection').style.display='none';
-      return;
-    }
+    if(!primeurYears.length){ document.getElementById('primeursSection').style.display='none'; return; }
     document.getElementById('primeursSection').style.display='';
     primeurYears.forEach(y=>{
       const btn=document.createElement('button');
@@ -413,9 +368,7 @@
         return d.getFullYear()===currentPrimeurYear;
       })
       .sort((a,b)=> a.friday_date.localeCompare(b.friday_date));
-
-    const tbody=document.getElementById('primeursTbody'); 
-    tbody.innerHTML='';
+    const tbody=document.getElementById('primeursTbody'); tbody.innerHTML='';
     rows.forEach(r=>{
       const tr=document.createElement('tr'); tr.className="border-b"; tr.style.borderColor="var(--line)";
       tr.innerHTML=`<td class="py-2 px-2">W${String(r.week_num).padStart(2,'0')}</td>
@@ -435,11 +388,6 @@
     document.getElementById('btn-fr').onclick=()=>setLang('fr');
     document.getElementById('btn-en').onclick=()=>setLang('en');
 
-    document.getElementById('btn-print').onclick=()=>window.print();
-    document.getElementById('m-print').onclick=()=>window.print();
-    document.getElementById('btn-pdf').onclick=()=>{/* optioneel export */};
-    document.getElementById('m-pdf').onclick=()=>{/* optioneel export */};
-
     try{
       const data=await fetchJSON(APP_SCRIPT_JSON_URL);
       const rows = Array.isArray(data.rows) ? data.rows : [];
@@ -448,35 +396,31 @@
 
       contractKey = ['contract_price','contractprijs','contract'].find(k=>k in allRows[0]) || 'contract_price';
 
-      // Niet-primeurs scheiden
+      // Scheiding: niet-primeurs vs primeurs
       const nonPrimeRows = allRows.filter(r => !r.is_primeur);
+      primeurRows = allRows.filter(r => r.is_primeur===true);
 
-      // KPI op basis van niet-primeurs (fallback = allRows)
+      // KPI (laatste vrijdag) op basis van niet-primeurs; bij gebrek daaraan: alle rijen
       const baseForLatest = nonPrimeRows.length ? nonPrimeRows : allRows;
       const cutoffIso = (data.meta && data.meta.latest_cutoff_friday_iso) ? data.meta.latest_cutoff_friday_iso : (()=>{ 
-        const nowBE=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'})); 
-        const dow=nowBE.getDay(); const dsf=(dow>=5)?(dow-5):(dow+2); 
-        const lf=new Date(nowBE); lf.setDate(nowBE.getDate()-dsf); 
-        return lf.toISOString().slice(0,10); 
+        const nowBE=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'}));
+        const dow=nowBE.getDay(); const dsf=(dow>=5)?(dow-5):(dow+2); const lf=new Date(nowBE); lf.setDate(nowBE.getDate()-dsf);
+        return lf.toISOString().slice(0,10);
       })();
-      const cutoffDateObj = new Date(cutoffIso+'T00:00:00'); 
-      const target = isoWeekMetaJS(cutoffDateObj);
+      const cutoffDateObj = new Date(cutoffIso+'T00:00:00'); const target = isoWeekMetaJS(cutoffDateObj);
       latestOverallRow = [...baseForLatest].reverse().find(r=>{
         if(!r.notering && !r[contractKey]) return false;
         const meta=isoWeekMetaJS(new Date((r.friday_date||r.date)+'T00:00:00'));
         return meta.week===target.week && meta.year===target.year;
       }) || baseForLatest[baseForLatest.length-1];
 
-      // Seizoenen uit NIET-primeurs en beperken tot 24-25 en 25-26
+      // Seizoenen alleen uit niet-primeurs; toegestaan: 2024 (24-25) en 2025 (25-26)
       const seasonsRaw = Array.from(new Set(nonPrimeRows.map(r => (r.week_num>=36? r.week_year : r.week_year-1)))).sort((a,b)=>b-a);
       const allowed = [2024, 2025].filter(y => seasonsRaw.includes(y));
-
-      const sel = document.getElementById('seasonSelect');
-      sel.innerHTML='';
+      const sel = document.getElementById('seasonSelect'); sel.innerHTML='';
       allowed.forEach(y=>{ const opt=document.createElement('option'); opt.value=y; opt.textContent=`W36 ${y} – W36 ${y+1}`; sel.appendChild(opt); });
-
       const suggested = data.meta && data.meta.suggested_season_start_year;
-      seasonStartYear = allowed.includes(suggested) ? suggested : (allowed[0] || seasonsRaw[0] || 2025);
+      seasonStartYear = allowed.includes(suggested) ? suggested : (allowed[0] || seasonsRaw[0]);
       sel.value = seasonStartYear;
 
       function updateSeason(){
@@ -484,18 +428,22 @@
         seasonStartYear = y;
         const startDate = isoWeekStart(y,36), endMon = isoWeekStart(y+1,36);
         const endDate = new Date(endMon); endDate.setDate(endMon.getDate() + 6);
-        seasonRows = nonPrimeRows.filter(r=>{ const d=new Date((r.friday_date||r.date)+'T00:00:00'); return d>=startDate && d<=endDate; });
+        seasonRows = nonPrimeRows.filter(r=>{
+          const d=new Date((r.friday_date||r.date)+'T00:00:00'); 
+          return d>=startDate && d<=endDate;
+        });
         document.getElementById('seasonLabel').textContent=`W36 ${y} – W36 ${y+1}`;
         renderChart(); renderTable();
       }
       sel.onchange = updateSeason;
-      updateSeason(); // initialiseren
+      updateSeason();
       renderKPI();
 
-      // PRIMEURS voorbereiden
-      primeurRows = allRows.filter(r => r.is_primeur===true);
+      // PRIMEURS tabs + tabel
       if (primeurRows.length){
-        primeurYears = Array.from(new Set(primeurRows.map(r => new Date((r.friday_date||r.date)+'T00:00:00').getFullYear()))).sort((a,b)=>b-a);
+        primeurYears = Array.from(new Set(
+          primeurRows.map(r => new Date((r.friday_date||r.date)+'T00:00:00').getFullYear())
+        )).sort((a,b)=>b-a);
         currentPrimeurYear = primeurYears[0];
         renderPrimeursTabs();
         renderPrimeurs();
