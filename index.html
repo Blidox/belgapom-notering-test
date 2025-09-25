@@ -5,11 +5,19 @@
   <link rel="icon" type="image/svg+xml" href="assets/Asset%201.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Belgapom – Notering / Cotation / Quotation</title>
+
+  <!-- UI libs -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <!-- PDF (print-friendly export) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
   <style>
-    :root{ --brand-primary:#FFCA00; --brand-neutral:#3f3f3f; --accent-quote:#2aa36b;
-           --bg:#f7f7f8; --ink:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb; }
+    :root{
+      --brand-primary:#FFCA00; --brand-neutral:#3f3f3f; --accent-quote:#2aa36b;
+      --bg:#f7f7f8; --ink:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb;
+    }
     html,body{ background:var(--bg); color:var(--ink); }
     .btn{ padding:.55rem .8rem; border-radius:0.75rem; border:1px solid var(--line); background:var(--card); font-size:.95rem }
     .btn-active{ background:var(--brand-primary); color:#1a1a1a; border-color:transparent; font-weight:700; }
@@ -23,6 +31,7 @@
     .loading-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);backdrop-filter:blur(2px)}
     .loading-hidden{display:none!important}
     .notice{background:#fff7d6;border:1px solid #f2e4a3;color:#5b4a00;padding:.5rem .75rem;border-radius:.75rem;font-size:.9rem}
+    @media print { .no-print { display:none !important } }
   </style>
 </head>
 <body>
@@ -40,6 +49,8 @@
         <button id="btn-nl" class="btn">NL</button>
         <button id="btn-fr" class="btn">FR</button>
         <button id="btn-en" class="btn">EN</button>
+        <button id="btn-print" class="btn hidden md:inline-flex" data-i18n="print_label">Print</button>
+        <button id="btn-pdf" class="btn hidden md:inline-flex" style="background:var(--brand-primary);border-color:transparent;color:#1a1a1a" data-i18n="pdf_download">Download PDF</button>
       </div>
     </div>
   </header>
@@ -170,6 +181,16 @@
     </div>
   </section>
 
+  <!-- Mobile sticky actions -->
+  <div class="fixed bottom-3 inset-x-0 px-3 md:hidden no-print z-30">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex gap-2 p-2 rounded-2xl shadow-lg" style="background:var(--card); border:1px solid var(--line)">
+        <button id="m-print" class="flex-1 btn" data-i18n="print_label">Print</button>
+        <button id="m-pdf" class="flex-1 btn-active" data-i18n="pdf_download" style="background:var(--brand-primary);border-color:transparent;color:#1a1a1a">Download PDF</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   /* >>> VERVANG door jouw exec-URL */
   const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbz723Fzq9rDxCASKF8w0kaZ-an-4uE_A_roCm_7wCkkISb1dSpo13OydpGx3NBA4kgM/exec?mode=json";
@@ -196,7 +217,8 @@
       season_label:"Seizoen",
       primeurs_title:"Historiek primeurs",
       primeurs_hint:"Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.",
-      primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering"
+      primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering",
+      pdf_download:"Download PDF", print_label:"Print"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
       current_period_title:"Période actuelle",
@@ -204,15 +226,21 @@
       last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
       table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation",
       legend_title:"Légende – tendance du marché",
-      legend_items:["Faible","Calme","Stable","Soutenu","Ferme"],
+      legend_items:["Faible — l’offre > la demande","Calme — l’offre ≥ la demande","Stable — équilibre","Soutenu — l’offre ≤ la demande","Ferme — l’offre < la demande"],
       rules_title:"Réglementation & explications",
-      rules_body:["…","…","…","…"],
+      rules_body:[
+        "Marché libre et contrats dans le secteur belge des frites surgelées.",
+        "La cotation hebdomadaire (précoces et saison de stockage) reflète l’évolution du marché libre.",
+        "Les contrats de culture assurent davantage de stabilité des prix.",
+        "Le graphique montre donc prix contractuels et cotation."
+      ],
       loading_chart:"Chargement des données…", loading_table:"Chargement du tableau…", loading_error:"Impossible de charger les données : ",
       no_quote_notice:"Pas de cotation faute de transactions",
       season_label:"Saison",
       primeurs_title:"Historique primeurs",
-      primeurs_hint:"Période 15 juillet – 15 septembre; uniquement cotation. Valeur vide = pas de cotation (faute de transactions).",
-      primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation"
+      primeurs_hint:"15 juillet – 15 septembre; uniquement cotation. Valeur vide = pas de cotation (manque de transactions).",
+      primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation",
+      pdf_download:"Télécharger PDF", print_label:"Imprimer"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
       current_period_title:"Current period",
@@ -220,15 +248,21 @@
       last_update_label:"Last update", source:"Source: internal reporting",
       table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation",
       legend_title:"Legend – market sentiment",
-      legend_items:["Weak","Calm","Stable","Supported","Firm"],
+      legend_items:["Weak — supply > demand","Calm — supply ≥ demand","Stable — equilibrium","Supported — supply ≤ demand","Firm — supply < demand"],
       rules_title:"Regulation & explanation",
-      rules_body:["…","…","…","…"],
+      rules_body:[
+        "Free market and contracts in the Belgian frozen-fries sector.",
+        "The weekly quotation (early potatoes and storage season) reflects free-market moves.",
+        "Production contracts add price stability.",
+        "So the chart shows both contract price and quotation."
+      ],
       loading_chart:"Loading data…", loading_table:"Loading table…", loading_error:"Could not load data: ",
       no_quote_notice:"No quotation due to lack of transactions",
       season_label:"Season",
       primeurs_title:"Early potatoes – history",
       primeurs_hint:"15 July – 15 September; quotation only. Empty value = no quotation (lack of transactions).",
-      primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation"
+      primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation",
+      pdf_download:"Download PDF", print_label:"Print"
     }
   };
   function applyI18N(){
@@ -378,6 +412,40 @@
     });
   }
 
+  /* PDF export */
+  async function makePDFImproved(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'pt', format:'a4' });
+    const root = document.getElementById('contentRoot');
+
+    // Header
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(17,24,39);
+    doc.text(document.getElementById('title').textContent, 40, 40);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80);
+    doc.text(document.getElementById('subtitle').textContent, 40, 58);
+
+    const chartCard=root.querySelector('section > div');
+    const tableCard=root.querySelector('aside > div:nth-child(2)');
+    const pad=24; let y=80;
+
+    async function addBlock(el){
+      const canvas=await html2canvas(el,{ scale:2, backgroundColor:null });
+      const img=canvas.toDataURL('imagePNG'); const pageW=doc.internal.pageSize.getWidth();
+      const pageH=doc.internal.pageSize.getHeight(); const margin=40;
+      let w=canvas.width, h=canvas.height; const maxW=pageW-2*margin;
+      if (w>maxW){ const s=maxW/w; w=maxW; h=h*s; }
+      const availH=pageH - margin - y;
+      if (h>availH && h>0){ const s=availH/h; if (s<1){ w=w*s; h=h*s; } }
+      if (y + h > pageH - margin){ doc.addPage(); y=margin; }
+      doc.addImage(img,'PNG',margin,y,w,h,undefined,'FAST'); y+=h+pad;
+    }
+
+    await addBlock(chartCard);
+    await addBlock(tableCard);
+    const fname=`belgapom-notering_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(fname);
+  }
+
   async function fetchJSON(u){ const r=await fetch(u,{cache:'no-store'}); const t=await r.text(); if(!t) throw new Error('Lege respons'); if(t.trim().startsWith('<')) throw new Error('HTML i.p.v. JSON'); return JSON.parse(t); }
 
   (async function init(){
@@ -388,6 +456,12 @@
     document.getElementById('btn-fr').onclick=()=>setLang('fr');
     document.getElementById('btn-en').onclick=()=>setLang('en');
 
+    // Print/PDF
+    document.getElementById('btn-print').onclick=()=>window.print();
+    document.getElementById('m-print').onclick=()=>window.print();
+    document.getElementById('btn-pdf').onclick=makePDFImproved;
+    document.getElementById('m-pdf').onclick=makePDFImproved;
+
     try{
       const data=await fetchJSON(APP_SCRIPT_JSON_URL);
       const rows = Array.isArray(data.rows) ? data.rows : [];
@@ -396,11 +470,11 @@
 
       contractKey = ['contract_price','contractprijs','contract'].find(k=>k in allRows[0]) || 'contract_price';
 
-      // Scheiding: niet-primeurs vs primeurs
+      // Scheiding
       const nonPrimeRows = allRows.filter(r => !r.is_primeur);
       primeurRows = allRows.filter(r => r.is_primeur===true);
 
-      // KPI (laatste vrijdag) op basis van niet-primeurs; bij gebrek daaraan: alle rijen
+      // KPI (laatste vrijdag) gebaseerd op niet-primeurs; fallback = alle rijen
       const baseForLatest = nonPrimeRows.length ? nonPrimeRows : allRows;
       const cutoffIso = (data.meta && data.meta.latest_cutoff_friday_iso) ? data.meta.latest_cutoff_friday_iso : (()=>{ 
         const nowBE=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'}));
@@ -445,19 +519,23 @@
           primeurRows.map(r => new Date((r.friday_date||r.date)+'T00:00:00').getFullYear())
         )).sort((a,b)=>b-a);
         currentPrimeurYear = primeurYears[0];
-        renderPrimeursTabs();
-        renderPrimeurs();
+        renderPrimeursTabs(); renderPrimeurs();
         document.getElementById('primeursSection').style.display='';
       } else {
         document.getElementById('primeursSection').style.display='none';
       }
 
-      hideLoaders();
+      // klaar
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
+      document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('chartLoader').classList.add('loading-hidden');
+      document.getElementById('tableLoader').classList.add('loading-hidden');
     }catch(err){
       const d=T[LANG]||T.nl;
       document.getElementById('chartLoaderText').textContent = (d.loading_error||'Kon data niet laden: ')+err.message;
       document.getElementById('tableLoaderText').textContent  = (d.loading_error||'Kon data niet laden: ')+err.message;
-      hideLoaders();
+      document.getElementById('chartLoader').classList.remove('loading-hidden');
+      document.getElementById('tableLoader').classList.remove('loading-hidden');
     }
   })();
   </script>
