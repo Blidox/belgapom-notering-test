@@ -27,7 +27,11 @@
     .chip-red{ background:#b91c1c; color:white; }
     .kpi{ font-size:clamp(1.15rem, 2.6vw, 1.5rem); font-weight:800 }
     /* Highlight the notering value so it stands out */
-    #kpi-quote{ color:var(--accent-quote); }
+    #kpi-quote,
+    #kpi-quote-fontane,
+    #kpi-quote-challenger{
+      color:var(--accent-quote);
+    }
     .spinner{ width:22px;height:22px;border:3px solid rgba(0,0,0,.15);border-top-color:rgba(0,0,0,.6);border-radius:50%;animation:spin .9s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg)}}
     .loading-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);backdrop-filter:blur(2px)}
@@ -63,50 +67,67 @@
     <section class="md:col-span-2 space-y-4">
       <div class="rounded-2xl shadow-sm" style="background:var(--card); border:1px solid var(--line);">
         <!-- Head -->
-        <div class="p-3 md:p-4 flex items-center justify-between gap-3 border-b" style="border-color:var(--line)">
-          <div class="flex-1">
-            <h2 class="text-base md:text-lg font-semibold" data-i18n="current_period_title">Huidige periode</h2>
-            <div id="seasonLabel" class="text-xs md:text-sm" style="color:var(--muted)"></div>
-          </div>
+        <div class="p-3 md:p-4 flex items-center gap-2 border-b" style="border-color:var(--line)">
+          <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap text-xs md:text-sm">Seizoen:</label>
+          <select id="seasonSelect" class="border rounded px-2 py-1"></select>
         </div>
 
-        <!-- KPI’s -->
-        <div class="p-3 md:p-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-sm">
-          <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_quote">Notering</div><div id="kpi-quote" class="kpi">–</div></div>
-          <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_week">Week</div><div id="kpi-week" class="kpi">–</div></div>
-          <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_date">Datum</div><div id="kpi-date" class="kpi">–</div></div>
-          <div class="col-span-2 md:col-span-1">
-            <div class="text-xs" style="color:var(--muted)" data-i18n="kpi_sentiment">Marktstemming</div>
-            <span id="kpi-sentiment" class="chip chip-slate mt-1">–</span>
-          </div>
-        </div>
-
-        <!-- Notice geen notering -->
-        <div id="noQuoteNotice" class="mx-3 md:mx-4 mb-3 notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
-
-        <!-- Season selector + Chart for Fontane -->
-        <div class="relative h-[340px] md:h-[440px] px-2 pb-2" id="chartWrap">
-          <div class="flex items-center gap-2 text-xs md:text-sm mb-2">
-            <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap">Seizoen:</label>
-            <select id="seasonSelect" class="border rounded px-2 py-1"></select>
-          </div>
-
-          <canvas id="chart" aria-label="Grafiek contractprijs &amp; notering Fontane" role="img"></canvas>
-          <div id="chartLoader" class="loading-overlay">
-            <div class="flex items-center gap-2 text-sm">
-              <div class="spinner" aria-hidden="true"></div>
-              <span id="chartLoaderText">Data laden…</span>
+        <!-- Info and charts for each variety -->
+        <div>
+          <!-- Info + chart: Fontane -->
+          <div class="border-b" style="border-color:var(--line)">
+            <div class="p-3 md:p-4 flex items-center justify-between gap-3">
+              <div class="flex-1">
+                <h2 class="text-base md:text-lg font-semibold">Fontane</h2>
+                <div id="seasonLabelVarietyFontane" class="text-xs md:text-sm" style="color:var(--muted)"></div>
+              </div>
+            </div>
+            <div class="p-3 md:p-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-sm">
+              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_quote">Notering</div><div id="kpi-quote-fontane" class="kpi">–</div></div>
+              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_week">Week</div><div id="kpi-week-fontane" class="kpi">–</div></div>
+              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_date">Datum</div><div id="kpi-date-fontane" class="kpi">–</div></div>
+              <div class="col-span-2 md:col-span-1">
+                <div class="text-xs" style="color:var(--muted)" data-i18n="kpi_sentiment">Marktstemming</div>
+                <span id="kpi-sentiment-fontane" class="chip chip-slate mt-1">–</span>
+              </div>
+            </div>
+            <div id="noQuoteNoticeFontane" class="mx-3 md:mx-4 mb-3 notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
+            <div class="relative h-[340px] md:h-[440px] px-2 pb-2">
+              <canvas id="chart" aria-label="Grafiek contractprijs &amp; notering Fontane" role="img"></canvas>
+              <div id="chartLoader" class="loading-overlay">
+                <div class="flex items-center gap-2 text-sm">
+                  <div class="spinner" aria-hidden="true"></div>
+                  <span id="chartLoaderText">Data laden…</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- Second Chart for Challenger -->
-        <div class="relative h-[340px] md:h-[440px] px-2 pb-2" id="chartWrap2">
-          <canvas id="chart2" aria-label="Grafiek contractprijs &amp; notering Challenger" role="img"></canvas>
-          <div id="chart2Loader" class="loading-overlay">
-            <div class="flex items-center gap-2 text-sm">
-              <div class="spinner" aria-hidden="true"></div>
-              <span id="chart2LoaderText">Data laden…</span>
+          <!-- Info + chart: Challenger -->
+          <div>
+            <div class="p-3 md:p-4 flex items-center justify-between gap-3">
+              <div class="flex-1">
+                <h2 class="text-base md:text-lg font-semibold">Challenger</h2>
+                <div id="seasonLabelVarietyChallenger" class="text-xs md:text-sm" style="color:var(--muted)"></div>
+              </div>
+            </div>
+            <div class="p-3 md:p-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-sm">
+              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_quote">Notering</div><div id="kpi-quote-challenger" class="kpi">–</div></div>
+              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_week">Week</div><div id="kpi-week-challenger" class="kpi">–</div></div>
+              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_date">Datum</div><div id="kpi-date-challenger" class="kpi">–</div></div>
+              <div class="col-span-2 md:col-span-1">
+                <div class="text-xs" style="color:var(--muted)" data-i18n="kpi_sentiment">Marktstemming</div>
+                <span id="kpi-sentiment-challenger" class="chip chip-slate mt-1">–</span>
+              </div>
+            </div>
+            <div id="noQuoteNoticeChallenger" class="mx-3 md:mx-4 mb-3 notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
+            <div class="relative h-[340px] md:h-[440px] px-2 pb-2">
+              <canvas id="chart2" aria-label="Grafiek contractprijs &amp; notering Challenger" role="img"></canvas>
+              <div id="chart2Loader" class="loading-overlay">
+                <div class="flex items-center gap-2 text-sm">
+                  <div class="spinner" aria-hidden="true"></div>
+                  <span id="chart2LoaderText">Data laden…</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -234,7 +255,7 @@
 
   <script>
   /* >>> VERVANG door jouw exec-URL */
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxI-J0iKtKudLhAPTtUCVn8Ylt0fC7umwqAfcG8lBs2Euzcz5SNJwSJLnVEf_boiYWf/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxZNjsq7WTacbqw5rBc0jDdDDdKsVvsPjU3MQ2y2PwsnXzkwmrxDxgvDlhvZCw-9SNs/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
@@ -363,25 +384,41 @@
     document.getElementById('table2Loader').classList.add('loading-hidden');
   };
 
-  function renderKPI(){
+  // Render KPIs for each variety separately
+  function renderKPIVarieties(){
     const r = latestOverallRow;
-    // Highlight notering value; uses whichever notering is present (Fontane by preference)
-    const notVal = toNum(r.notering_fontane != null ? r.notering_fontane : (r.notering_challenger != null ? r.notering_challenger : r.notering));
-    document.getElementById('kpi-quote').textContent = euro(notVal);
-    document.getElementById('kpi-week').textContent  = String(r.week_num).padStart(2,'0');
-    document.getElementById('kpi-date').textContent  = formatDateISO(r.friday_date);
-    const noQuote = (notVal==null || notVal==='');
-    const notice=document.getElementById('noQuoteNotice');
-    if(noQuote){ notice.classList.remove('hidden'); } else { notice.classList.add('hidden'); }
-    const b=document.getElementById('kpi-sentiment'); b.textContent=r.marktstemming||'–';
-    const s=(r.marktstemming||'').toLowerCase();
-    b.className='chip mt-1 '+(
-      s.includes('vast')||s.includes('ferme')||s.includes('firm') ? 'chip-green' :
-      s.includes('houd')||s.includes('soutenu')||s.includes('support') ? 'chip-slate' :
-      s.includes('stabiel')||s.includes('stable') ? 'chip-slate' :
-      s.includes('rustig')||s.includes('calme')||s.includes('calm') ? 'chip-slate' :
-      s.includes('flauw')||s.includes('faible')||s.includes('weak')||s.includes('neg') ? 'chip-red' : 'chip-slate'
-    );
+    // Helper to update a specific variety
+    function updateVariety(variety){
+      const quoteEl  = document.getElementById('kpi-quote-' + variety);
+      const weekEl   = document.getElementById('kpi-week-' + variety);
+      const dateEl   = document.getElementById('kpi-date-' + variety);
+      const sentEl   = document.getElementById('kpi-sentiment-' + variety);
+      const noticeEl = document.getElementById('noQuoteNotice' + (variety.charAt(0).toUpperCase() + variety.slice(1)));
+      if(!quoteEl) return;
+      // Determine notering value for this variety; fall back to general notering if needed
+      let v;
+      if (variety==='fontane') v = (r.notering_fontane != null ? r.notering_fontane : r.notering);
+      else if (variety==='challenger') v = (r.notering_challenger != null ? r.notering_challenger : r.notering);
+      const val = toNum(v);
+      quoteEl.textContent = euro(val);
+      weekEl.textContent  = String(r.week_num).padStart(2,'0');
+      dateEl.textContent  = formatDateISO(r.friday_date);
+      const noQuote = (val==null || val==='');
+      if(noQuote){ noticeEl && noticeEl.classList.remove('hidden'); } else { noticeEl && noticeEl.classList.add('hidden'); }
+      // Sentiment
+      sentEl.textContent = r.marktstemming || '–';
+      const s = (r.marktstemming||'').toLowerCase();
+      const cls =
+        s.includes('vast')||s.includes('ferme')||s.includes('firm') ? 'chip-green' :
+        s.includes('houd')||s.includes('soutenu')||s.includes('support') ? 'chip-slate' :
+        s.includes('stabiel')||s.includes('stable') ? 'chip-slate' :
+        s.includes('rustig')||s.includes('calme')||s.includes('calm') ? 'chip-slate' :
+        s.includes('flauw')||s.includes('faible')||s.includes('weak')||s.includes('neg') ? 'chip-red' : 'chip-slate';
+      sentEl.className = 'chip mt-1 ' + cls;
+    }
+    updateVariety('fontane');
+    updateVariety('challenger');
+    // Update last update and year
     document.getElementById('lastUpdate').textContent = new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
     document.getElementById('year').textContent = new Date().getFullYear();
   }
@@ -559,7 +596,7 @@
   (async function init(){
     applyI18N();
 
-    const setLang = (l)=>{ LANG=l; applyI18N(); renderKPI(); renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger'); if(primeurYears.length){ renderPrimeursTabs(); renderPrimeurs(); } };
+    const setLang = (l)=>{ LANG=l; applyI18N(); renderKPIVarieties(); renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger'); if(primeurYears.length){ renderPrimeursTabs(); renderPrimeurs(); } };
     document.getElementById('btn-nl').onclick=()=>setLang('nl');
     document.getElementById('btn-fr').onclick=()=>setLang('fr');
     document.getElementById('btn-en').onclick=()=>setLang('en');
@@ -615,12 +652,17 @@
           const d=new Date((r.friday_date||r.date)+'T00:00:00');
           return d>=startDate && d<=endDate;
         });
-        document.getElementById('seasonLabel').textContent=`W36 ${y} – W36 ${y+1}`;
+        // Update season labels for both varieties
+        const seasonText = `W36 ${y} – W36 ${y+1}`;
+        const lblFont = document.getElementById('seasonLabelVarietyFontane');
+        const lblChal  = document.getElementById('seasonLabelVarietyChallenger');
+        if (lblFont) lblFont.textContent = seasonText;
+        if (lblChal)  lblChal.textContent  = seasonText;
         renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger');
       }
       sel.onchange = updateSeason;
       updateSeason();
-      renderKPI();
+      renderKPIVarieties();
 
       // PRIMEURS tabs + tabel
       if (primeurRows.length){
