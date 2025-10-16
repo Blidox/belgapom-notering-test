@@ -26,6 +26,8 @@
     .chip-slate{ background:#475569; color:white; }
     .chip-red{ background:#b91c1c; color:white; }
     .kpi{ font-size:clamp(1.15rem, 2.6vw, 1.5rem); font-weight:800 }
+    /* Highlight the notering value so it stands out */
+    #kpi-quote{ color:var(--accent-quote); }
     .spinner{ width:22px;height:22px;border:3px solid rgba(0,0,0,.15);border-top-color:rgba(0,0,0,.6);border-radius:50%;animation:spin .9s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg)}}
     .loading-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);backdrop-filter:blur(2px)}
@@ -82,18 +84,29 @@
         <!-- Notice geen notering -->
         <div id="noQuoteNotice" class="mx-3 md:mx-4 mb-3 notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
 
-        <!-- Season selector + Chart -->
+        <!-- Season selector + Chart for Fontane -->
         <div class="relative h-[340px] md:h-[440px] px-2 pb-2" id="chartWrap">
           <div class="flex items-center gap-2 text-xs md:text-sm mb-2">
             <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap">Seizoen:</label>
             <select id="seasonSelect" class="border rounded px-2 py-1"></select>
           </div>
 
-          <canvas id="chart" aria-label="Grafiek contractprijs & notering" role="img"></canvas>
+          <canvas id="chart" aria-label="Grafiek contractprijs &amp; notering Fontane" role="img"></canvas>
           <div id="chartLoader" class="loading-overlay">
             <div class="flex items-center gap-2 text-sm">
               <div class="spinner" aria-hidden="true"></div>
               <span id="chartLoaderText">Data laden…</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Second Chart for Challenger -->
+        <div class="relative h-[340px] md:h-[440px] px-2 pb-2" id="chartWrap2">
+          <canvas id="chart2" aria-label="Grafiek contractprijs &amp; notering Challenger" role="img"></canvas>
+          <div id="chart2Loader" class="loading-overlay">
+            <div class="flex items-center gap-2 text-sm">
+              <div class="spinner" aria-hidden="true"></div>
+              <span id="chart2LoaderText">Data laden…</span>
             </div>
           </div>
         </div>
@@ -106,7 +119,7 @@
 
         <!-- Reglementering -->
         <div class="p-3 md:p-4 border-t text-sm md:text-[15px] leading-relaxed" style="border-color:var(--line)">
-          <h3 class="font-semibold mb-2 text-sm md:text-base" data-i18n="rules_title">Reglementering & toelichting</h3>
+          <h3 class="font-semibold mb-2 text-sm md:text-base" data-i18n="rules_title">Reglementering &amp; toelichting</h3>
           <div id="rules_body"></div>
         </div>
       </div>
@@ -120,9 +133,10 @@
         <p class="text-xs">© <span id="year"></span> Belgapom</p>
       </div>
 
+      <!-- Table for Fontane -->
       <div class="rounded-2xl shadow-sm p-3 md:p-4" style="background:var(--card); border:1px solid var(--line)">
         <div class="flex items-center justify-between gap-2">
-          <strong data-i18n="table_title">Overzicht per week</strong>
+          <strong id="tableTitle1" data-i18n="table_title_fontane">Overzicht per week – Fontane</strong>
           <div class="text-xs md:text-sm" id="tableSeason" style="color:var(--muted)"></div>
         </div>
         <div class="relative max-h-[360px] md:max-h-[520px] overflow-auto mt-3 rounded-lg ring-1" style="--tw-ring-color:var(--line)">
@@ -142,6 +156,33 @@
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Table for Challenger -->
+      <div class="rounded-2xl shadow-sm p-3 md:p-4 mt-4" style="background:var(--card); border:1px solid var(--line)">
+        <div class="flex items-center justify-between gap-2">
+          <strong id="tableTitle2" data-i18n="table_title_challenger">Overzicht per week – Challenger</strong>
+          <div class="text-xs md:text-sm" id="tableSeason2" style="color:var(--muted)"></div>
+        </div>
+        <div class="relative max-h-[360px] md:max-h-[520px] overflow-auto mt-3 rounded-lg ring-1" style="--tw-ring-color:var(--line)">
+          <div id="table2Loader" class="loading-overlay">
+            <div class="flex items-center gap-2 text-sm">
+              <div class="spinner" aria-hidden="true"></div>
+              <span id="table2LoaderText">Tabel laden…</span>
+            </div>
+          </div>
+          <table class="w-full text-[13px] md:text-sm">
+            <thead class="sticky top-0" style="background:var(--card); color:var(--muted); border-bottom:1px solid var(--line)">
+              <tr>
+                <th class="text-left py-2 px-2" data-i18n="th_week">Week</th>
+                <th class="text-left py-2 px-2" data-i18n="th_date">Datum (vr)</th>
+                <th class="text-left py-2 px-2" data-i18n="th_contract">Contract</th>
+                <th class="text-left py-2 px-2" data-i18n="th_quote">Notering</th>
+              </tr>
+            </thead>
+            <tbody id="tbody2"></tbody>
           </table>
         </div>
       </div>
@@ -193,7 +234,7 @@
 
   <script>
   /* >>> VERVANG door jouw exec-URL */
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbwM9BLrMt1PJBzXc5ZhwLY94MBQvudnCTLr1D-T3JQIsu_edvDk4CelE4avnaE9e5rn/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxI-J0iKtKudLhAPTtUCVn8Ylt0fC7umwqAfcG8lBs2Euzcz5SNJwSJLnVEf_boiYWf/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
@@ -203,6 +244,7 @@
       kpi_quote:"Notering", kpi_week:"Week", kpi_date:"Datum", kpi_sentiment:"Marktstemming",
       last_update_label:"Laatste update", source:"Bron: interne rapportering",
       table_title:"Overzicht per week", th_week:"Week", th_date:"Datum (vr)", th_contract:"Contract", th_quote:"Notering",
+      table_title_fontane:"Overzicht per week – Fontane", table_title_challenger:"Overzicht per week – Challenger",
       legend_title:"Legende marktstemming",
       legend_items:["Flauw — aanbod is groter dan de vraag","Rustig — aanbod is groter dan of gelijk aan de vraag","Stabiel — aanbod is gelijk aan de vraag (evenwicht)","Prijshoudend — aanbod is kleiner dan of gelijk aan de vraag","Vast — aanbod is kleiner dan de vraag"],
       rules_title:"Reglementering & toelichting",
@@ -218,6 +260,7 @@
       primeurs_title:"Historiek primeurs",
       primeurs_hint:"Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.",
       primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering",
+      dataset_label_fontane:"Notering Fontane (€/t)", dataset_label_challenger:"Notering Challenger (€/t)",
       pdf_download:"Download PDF", print_label:"Print"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
@@ -225,6 +268,7 @@
       kpi_quote:"Cotation", kpi_week:"Semaine", kpi_date:"Date", kpi_sentiment:"Tendance du marché",
       last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
       table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation",
+      table_title_fontane:"Aperçu par semaine – Fontane", table_title_challenger:"Aperçu par semaine – Challenger",
       legend_title:"Légende – tendance du marché",
       legend_items:["Faible — l’offre > la demande","Calme — l’offre ≥ la demande","Stable — équilibre","Soutenu — l’offre ≤ la demande","Ferme — l’offre < la demande"],
       rules_title:"Réglementation & explications",
@@ -240,6 +284,7 @@
       primeurs_title:"Historique primeurs",
       primeurs_hint:"15 juillet – 15 septembre; uniquement cotation. Valeur vide = pas de cotation (manque de transactions).",
       primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation",
+      dataset_label_fontane:"Cotation Fontane (€/t)", dataset_label_challenger:"Cotation Challenger (€/t)",
       pdf_download:"Télécharger PDF", print_label:"Imprimer"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
@@ -247,6 +292,7 @@
       kpi_quote:"Quotation", kpi_week:"Week", kpi_date:"Date", kpi_sentiment:"Market sentiment",
       last_update_label:"Last update", source:"Source: internal reporting",
       table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation",
+      table_title_fontane:"Overview per week – Fontane", table_title_challenger:"Overview per week – Challenger",
       legend_title:"Legend – market sentiment",
       legend_items:["Weak — supply > demand","Calm — supply ≥ demand","Stable — equilibrium","Supported — supply ≤ demand","Firm — supply < demand"],
       rules_title:"Regulation & explanation",
@@ -262,6 +308,7 @@
       primeurs_title:"Early potatoes – history",
       primeurs_hint:"15 July – 15 September; quotation only. Empty value = no quotation (lack of transactions).",
       primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation",
+      dataset_label_fontane:"Quotation Fontane (€/t)", dataset_label_challenger:"Quotation Challenger (€/t)",
       pdf_download:"Download PDF", print_label:"Print"
     }
   };
@@ -272,11 +319,19 @@
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const k=el.getAttribute('data-i18n'); if(d[k]) el.textContent=d[k];
     });
+    // Legend items
     const ul=document.getElementById('legend_list'); ul.innerHTML='';
     d.legend_items.forEach(txt=>{ const li=document.createElement('li'); li.innerHTML=txt.replace(/^([^—-]+)/,'<strong>$1</strong>'); ul.appendChild(li); });
+    // Rules body
     document.getElementById('rules_body').innerHTML=d.rules_body.map(p=>`<p class="mb-2">${p}</p>`).join('');
+    // Loader texts
     const cl=document.getElementById('chartLoaderText'); if(cl) cl.textContent=d.loading_chart;
+    const ct2=document.getElementById('chart2LoaderText'); if(ct2) ct2.textContent=d.loading_chart;
     const tl=document.getElementById('tableLoaderText'); if(tl) tl.textContent=d.loading_table;
+    const tl2=document.getElementById('table2LoaderText'); if(tl2) tl2.textContent=d.loading_table;
+    // Table titles
+    const tt1=document.getElementById('tableTitle1'); if(tt1 && d.table_title_fontane) tt1.textContent=d.table_title_fontane;
+    const tt2=document.getElementById('tableTitle2'); if(tt2 && d.table_title_challenger) tt2.textContent=d.table_title_challenger;
   }
 
   /* helpers */
@@ -292,18 +347,30 @@
   function isoWeekStart(y,w){ const simple=new Date(y,0,1+(w-1)*7); let dow=simple.getDay(); if(dow===0) dow=7; const mon=new Date(simple); mon.setDate(simple.getDate()-dow+1); return new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()); }
 
   /* state */
-  let chart, allRows=[], seasonRows=[], seasonStartYear, latestOverallRow, contractKey='contract_price';
+  let chartFontane, chartChallenger, allRows=[], seasonRows=[], seasonStartYear, latestOverallRow, contractKey='contract_price';
   let primeurRows=[], primeurYears=[], currentPrimeurYear=null;
 
-  const showLoaders=()=>{ document.getElementById('chartLoader').classList.remove('loading-hidden'); document.getElementById('tableLoader').classList.remove('loading-hidden'); };
-  const hideLoaders=()=>{ document.getElementById('chartLoader').classList.add('loading-hidden'); document.getElementById('tableLoader').classList.add('loading-hidden'); };
+  const showLoaders=()=>{
+    document.getElementById('chartLoader').classList.remove('loading-hidden');
+    document.getElementById('chart2Loader').classList.remove('loading-hidden');
+    document.getElementById('tableLoader').classList.remove('loading-hidden');
+    document.getElementById('table2Loader').classList.remove('loading-hidden');
+  };
+  const hideLoaders=()=>{
+    document.getElementById('chartLoader').classList.add('loading-hidden');
+    document.getElementById('chart2Loader').classList.add('loading-hidden');
+    document.getElementById('tableLoader').classList.add('loading-hidden');
+    document.getElementById('table2Loader').classList.add('loading-hidden');
+  };
 
   function renderKPI(){
     const r = latestOverallRow;
-    document.getElementById('kpi-quote').textContent = euro(toNum(r.notering));
+    // Highlight notering value; uses whichever notering is present (Fontane by preference)
+    const notVal = toNum(r.notering_fontane != null ? r.notering_fontane : (r.notering_challenger != null ? r.notering_challenger : r.notering));
+    document.getElementById('kpi-quote').textContent = euro(notVal);
     document.getElementById('kpi-week').textContent  = String(r.week_num).padStart(2,'0');
     document.getElementById('kpi-date').textContent  = formatDateISO(r.friday_date);
-    const noQuote = (r.notering==null || r.notering==='');
+    const noQuote = (notVal==null || notVal==='');
     const notice=document.getElementById('noQuoteNotice');
     if(noQuote){ notice.classList.remove('hidden'); } else { notice.classList.add('hidden'); }
     const b=document.getElementById('kpi-sentiment'); b.textContent=r.marktstemming||'–';
@@ -319,11 +386,14 @@
     document.getElementById('year').textContent = new Date().getFullYear();
   }
 
-  function buildSeries(){
+  function buildSeries(variety){
     const rows=[...seasonRows].sort((a,b)=> a.friday_date.localeCompare(b.friday_date));
     const labels = rows.map(r=> r.week_label);
     const contract = rows.map(r=> toNum(r[contractKey]));
-    const quote    = rows.map(r=> toNum(r.notering));
+    let quote;
+    if(variety==='challenger') quote = rows.map(r=> toNum(r.notering_challenger));
+    else if(variety==='fontane') quote = rows.map(r=> toNum(r.notering_fontane));
+    else quote = rows.map(r=> toNum(r.notering));
     const vals=[...contract,...quote].filter(Number.isFinite);
     let yMin=0,yMax=100,yStep=10;
     if(vals.length){
@@ -334,20 +404,22 @@
     return { labels, contract, quote, yMin, yMax, yStep };
   }
 
-  function renderChart(){
-    const { labels, contract, quote, yMin, yMax, yStep } = buildSeries();
+  function renderChartFontane(){
+    const { labels, contract, quote, yMin, yMax, yStep } = buildSeries('fontane');
     const ctx=document.getElementById('chart').getContext('2d');
-    if(chart) chart.destroy();
-    chart=new Chart(ctx,{
+    if(chartFontane) chartFontane.destroy();
+    const contractLabel = LANG==='fr'? 'Prix contractuel (€/t)' : LANG==='en'? 'Contract price (€/t)' : 'Contractprijs (€/t)';
+    const quoteLabel    = T[LANG].dataset_label_fontane || (LANG==='fr'? 'Cotation Fontane (€/t)' : LANG==='en'? 'Quotation Fontane (€/t)' : 'Notering Fontane (€/t)');
+    chartFontane=new Chart(ctx,{
       type:'line',
       data:{
         labels,
         datasets:[
-          { label: LANG==='fr'?'Prix contractuel (€/t)':LANG==='en'?'Contract price (€/t)':'Contractprijs (€/t)',
+          { label: contractLabel,
             data: contract, borderWidth:3, pointRadius:3.5, tension:0, stepped:true,
             borderColor:getComputedStyle(document.documentElement).getPropertyValue('--brand-neutral').trim(),
             backgroundColor:'transparent', spanGaps:false },
-          { label: LANG==='fr'?'Cotation (€/t)':LANG==='en'?'Quotation (€/t)':'Notering (€/t)',
+          { label: quoteLabel,
             data: quote, borderWidth:3, pointRadius:3.5, tension:0.2,
             borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-quote').trim(),
             backgroundColor:'transparent', spanGaps:false }
@@ -362,27 +434,60 @@
     });
   }
 
-  // Tabel: chronologisch (lost W36-bugs op) en zonder “Stemming”
-  function renderTable(){
-    const tbody = document.getElementById('tbody');
+  function renderChartChallenger(){
+    const { labels, contract, quote, yMin, yMax, yStep } = buildSeries('challenger');
+    const ctx=document.getElementById('chart2').getContext('2d');
+    if(chartChallenger) chartChallenger.destroy();
+    const contractLabel = LANG==='fr'? 'Prix contractuel (€/t)' : LANG==='en'? 'Contract price (€/t)' : 'Contractprijs (€/t)';
+    const quoteLabel    = T[LANG].dataset_label_challenger || (LANG==='fr'? 'Cotation Challenger (€/t)' : LANG==='en'? 'Quotation Challenger (€/t)' : 'Notering Challenger (€/t)');
+    chartChallenger=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          { label: contractLabel,
+            data: contract, borderWidth:3, pointRadius:3.5, tension:0, stepped:true,
+            borderColor:getComputedStyle(document.documentElement).getPropertyValue('--brand-neutral').trim(),
+            backgroundColor:'transparent', spanGaps:false },
+          { label: quoteLabel,
+            data: quote, borderWidth:3, pointRadius:3.5, tension:0.2,
+            borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-quote').trim(),
+            backgroundColor:'transparent', spanGaps:false }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, boxHeight:12, usePointStyle:true } }, tooltip:{ callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
+        scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:(window.innerWidth<640?6:14) }, grid:{ display:false } }, y:{ min:yMin, max:yMax, ticks:{ stepSize:yStep, callback:v=>`${v} €` }, grid:{ color:'rgba(0,0,0,0.06)' } } }
+      }
+    });
+  }
+
+  // Table: generalised for variety
+  function renderTableVariety(variety){
+    const tbodyId = variety==='challenger' ? 'tbody2' : 'tbody';
+    const tableSeasonId = variety==='challenger' ? 'tableSeason2' : 'tableSeason';
+    const tbody = document.getElementById(tbodyId);
     tbody.innerHTML = '';
     const rows = [...seasonRows].sort((a,b)=> String(a.friday_date||a.date).localeCompare(String(b.friday_date||b.date)));
     rows.forEach(r=>{
       const tr = document.createElement('tr');
       tr.className = "border-b";
       tr.style.borderColor = "var(--line)";
+      const quoteVal = variety==='challenger' ? euro(toNum(r.notering_challenger)) : euro(toNum(r.notering_fontane));
       tr.innerHTML = `
         <td class="py-2 px-2">W${String(r.week_num).padStart(2,'0')}</td>
         <td class="py-2 px-2">${formatDateISO(r.friday_date || r.date)}</td>
         <td class="py-2 px-2">${euro(toNum(r[contractKey]))}</td>
-        <td class="py-2 px-2">${euro(toNum(r.notering))}</td>
+        <td class="py-2 px-2">${quoteVal}</td>
       `;
       tbody.appendChild(tr);
     });
-    document.getElementById('tableSeason').textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
+    document.getElementById(tableSeasonId).textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
   }
 
-  // PRIMEURS (tabs + tabel)
+  // PRIMEURS (tabs + tabel) unchanged
   function renderPrimeursTabs(){
     const cont=document.getElementById('primeurTabs'); cont.innerHTML='';
     if(!primeurYears.length){ document.getElementById('primeursSection').style.display='none'; return; }
@@ -412,7 +517,7 @@
     });
   }
 
-  /* PDF export */
+  /* PDF export (unchanged) */
   async function makePDFImproved(){
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit:'pt', format:'a4' });
@@ -424,8 +529,10 @@
     doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80);
     doc.text(document.getElementById('subtitle').textContent, 40, 58);
 
+    // capture each card separately (charts + tables)
     const chartCard=root.querySelector('section > div');
-    const tableCard=root.querySelector('aside > div:nth-child(2)');
+    const tableCard1=root.querySelector('aside > div:nth-child(2)');
+    const tableCard2=root.querySelector('aside > div:nth-child(3)');
     const pad=24; let y=80;
 
     async function addBlock(el){
@@ -441,7 +548,8 @@
     }
 
     await addBlock(chartCard);
-    await addBlock(tableCard);
+    await addBlock(tableCard1);
+    await addBlock(tableCard2);
     const fname=`belgapom-notering_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(fname);
   }
@@ -451,7 +559,7 @@
   (async function init(){
     applyI18N();
 
-    const setLang = (l)=>{ LANG=l; applyI18N(); renderKPI(); renderChart(); renderTable(); if(primeurYears.length){ renderPrimeursTabs(); renderPrimeurs(); } };
+    const setLang = (l)=>{ LANG=l; applyI18N(); renderKPI(); renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger'); if(primeurYears.length){ renderPrimeursTabs(); renderPrimeurs(); } };
     document.getElementById('btn-nl').onclick=()=>setLang('nl');
     document.getElementById('btn-fr').onclick=()=>setLang('fr');
     document.getElementById('btn-en').onclick=()=>setLang('en');
@@ -470,7 +578,7 @@
 
       contractKey = ['contract_price','contractprijs','contract'].find(k=>k in allRows[0]) || 'contract_price';
 
-      // Scheiding
+      // Scheiding primeurs
       const nonPrimeRows = allRows.filter(r => !r.is_primeur);
       primeurRows = allRows.filter(r => r.is_primeur===true);
 
@@ -483,7 +591,8 @@
       })();
       const cutoffDateObj = new Date(cutoffIso+'T00:00:00'); const target = isoWeekMetaJS(cutoffDateObj);
       latestOverallRow = [...baseForLatest].reverse().find(r=>{
-        if(!r.notering && !r[contractKey]) return false;
+        const hasQuote = (r.notering_fontane != null) || (r.notering_challenger != null) || (r.notering != null) || (r[contractKey] != null);
+        if(!hasQuote) return false;
         const meta=isoWeekMetaJS(new Date((r.friday_date||r.date)+'T00:00:00'));
         return meta.week===target.week && meta.year===target.year;
       }) || baseForLatest[baseForLatest.length-1];
@@ -503,11 +612,11 @@
         const startDate = isoWeekStart(y,36), endMon = isoWeekStart(y+1,36);
         const endDate = new Date(endMon); endDate.setDate(endMon.getDate() + 6);
         seasonRows = nonPrimeRows.filter(r=>{
-          const d=new Date((r.friday_date||r.date)+'T00:00:00'); 
+          const d=new Date((r.friday_date||r.date)+'T00:00:00');
           return d>=startDate && d<=endDate;
         });
         document.getElementById('seasonLabel').textContent=`W36 ${y} – W36 ${y+1}`;
-        renderChart(); renderTable();
+        renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger');
       }
       sel.onchange = updateSeason;
       updateSeason();
@@ -528,14 +637,17 @@
       // klaar
       document.getElementById('lastUpdate').textContent = new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
       document.getElementById('year').textContent = new Date().getFullYear();
-      document.getElementById('chartLoader').classList.add('loading-hidden');
-      document.getElementById('tableLoader').classList.add('loading-hidden');
+      hideLoaders();
     }catch(err){
       const d=T[LANG]||T.nl;
       document.getElementById('chartLoaderText').textContent = (d.loading_error||'Kon data niet laden: ')+err.message;
+      document.getElementById('chart2LoaderText').textContent = (d.loading_error||'Kon data niet laden: ')+err.message;
       document.getElementById('tableLoaderText').textContent  = (d.loading_error||'Kon data niet laden: ')+err.message;
+      document.getElementById('table2LoaderText').textContent  = (d.loading_error||'Kon data niet laden: ')+err.message;
       document.getElementById('chartLoader').classList.remove('loading-hidden');
+      document.getElementById('chart2Loader').classList.remove('loading-hidden');
       document.getElementById('tableLoader').classList.remove('loading-hidden');
+      document.getElementById('table2Loader').classList.remove('loading-hidden');
     }
   })();
   </script>
