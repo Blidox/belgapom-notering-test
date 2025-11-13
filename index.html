@@ -261,7 +261,7 @@
 
   <script>
   /* >>> VERVANG door jouw exec-URL */
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxVJfZenr8i74CToEpTNiuFnHQG93sM7uQbRXW_Lc9WEyjwgiY5wkLLOUXbiQEp6HgY/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxQhpQxQiI9ad5ZwQdFaW7goDtiROztKgPabglaBM6QujJ9mXbuEZBn7TTkjgVBVW79Hw/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
@@ -289,7 +289,7 @@
       primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering",
       dataset_label_fontane:"Notering Fontane (€/t)", dataset_label_challenger:"Notering Challenger (€/t)",
       pdf_download:"Download PDF", print_label:"Print",
-      price_note:"Prijs van vrije aardappelen, exclusief btw"
+      price_note:"Prijzen van vrije aardappelen excl. btw"
     },
     fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
       current_period_title:"Période actuelle",
@@ -314,7 +314,7 @@
       primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation",
       dataset_label_fontane:"Cotation Fontane (€/t)", dataset_label_challenger:"Cotation Challenger (€/t)",
       pdf_download:"Télécharger PDF", print_label:"Imprimer",
-      price_note:"Prix des pommes de terre libres, hors TVA"
+      price_note:"Prix des pommes de terre libres (hors TVA)"
     },
     en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
       current_period_title:"Current period",
@@ -339,7 +339,7 @@
       primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation",
       dataset_label_fontane:"Quotation Fontane (€/t)", dataset_label_challenger:"Quotation Challenger (€/t)",
       pdf_download:"Download PDF", print_label:"Print",
-      price_note:"Price of free potatoes, excluding VAT"
+      price_note:"Price of free potatoes (excl. VAT)"
     }
   };
   function applyI18N(){
@@ -394,6 +394,28 @@
   };
 
   // Render KPIs for each variety separately
+  // Helper to translate market sentiment across languages
+  function translateSentiment(raw, lang){
+    if(!raw) return '–';
+    const s = String(raw).toLowerCase();
+    // Normalise to base keys based on keywords in multiple languages
+    let key = 'unknown';
+    if(s.includes('vast') || s.includes('ferme') || s.includes('firm')) key = 'vast';
+    else if(s.includes('houd') || s.includes('soutenu') || s.includes('support')) key = 'prijshoudend';
+    else if(s.includes('stabiel') || s.includes('stable')) key = 'stabiel';
+    else if(s.includes('rustig') || s.includes('calme') || s.includes('calm')) key = 'rustig';
+    else if(s.includes('flauw') || s.includes('faible') || s.includes('weak')) key = 'flauw';
+    const map = {
+      'vast':{nl:'Vast',fr:'Ferme',en:'Firm'},
+      'prijshoudend':{nl:'Prijshoudend',fr:'Soutenu',en:'Supported'},
+      'stabiel':{nl:'Stabiel',fr:'Stable',en:'Stable'},
+      'rustig':{nl:'Rustig',fr:'Calme',en:'Calm'},
+      'flauw':{nl:'Flauw',fr:'Faible',en:'Weak'},
+      'unknown':{nl:raw,fr:raw,en:raw}
+    };
+    return (map[key] && map[key][lang]) || raw;
+  }
+
   function renderKPIVarieties(){
     const r = latestOverallRow;
     // Helper to update a specific variety
@@ -414,8 +436,8 @@
       dateEl.textContent  = formatDateISO(r.friday_date);
       const noQuote = (val==null || val==='');
       if(noQuote){ noticeEl && noticeEl.classList.remove('hidden'); } else { noticeEl && noticeEl.classList.add('hidden'); }
-      // Sentiment
-      sentEl.textContent = r.marktstemming || '–';
+      // Sentiment (translate based on current language)
+      sentEl.textContent = translateSentiment(r.marktstemming, LANG);
       const s = (r.marktstemming||'').toLowerCase();
       const cls =
         s.includes('vast')||s.includes('ferme')||s.includes('firm') ? 'chip-green' :
@@ -522,7 +544,7 @@
       tr.className = "border-b";
       tr.style.borderColor = "var(--line)";
       const quoteVal = variety==='challenger' ? euro(toNum(r.notering_challenger)) : euro(toNum(r.notering_fontane));
-      const sentiment = (r.marktstemming != null && r.marktstemming !== '') ? r.marktstemming : '–';
+      const sentiment = (r.marktstemming != null && r.marktstemming !== '') ? translateSentiment(r.marktstemming, LANG) : '–';
       tr.innerHTML = `
         <td class="py-2 px-2">W${String(r.week_num).padStart(2,'0')}</td>
         <td class="py-2 px-2">${formatDateISO(r.friday_date || r.date)}</td>
