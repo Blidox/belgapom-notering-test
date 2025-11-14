@@ -45,10 +45,12 @@
   <header class="sticky top-0 z-20 border-b bg-white/90 backdrop-blur" style="border-color:var(--line)">
     <div class="max-w-6xl mx-auto px-3 md:px-4 py-2 md:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <img src="assets/belgapom-logo.svg" alt="Belgapom" class="h-8 w-auto"/>
+        <a href="https://belgapom.be" target="_blank" rel="noopener">
+  <img src="assets/belgapom-logo.svg" alt="Belgapom" class="h-8 w-auto hover:opacity-80 transition"/>
+</a>
         <div>
           <h1 id="title" class="font-semibold text-base md:text-lg">Belgapom – Notering</h1>
-          <p id="subtitle" class="text-xs md:text-sm" style="color:var(--muted)">Contractprijzen en wekelijkse notering (vrije aardappelen)</p>
+          <p id="subtitle" class="text-xs md:text-sm" style="color:var(--muted)">Contractprijzen en wekelijkse notering (vrije aardappelen excl. btw)</p>
         </div>
       </div>
       <div class="flex flex-wrap gap-1 md:gap-2 no-print mt-2 sm:mt-0">
@@ -261,12 +263,12 @@
 
   <script>
   /* >>> VERVANG door jouw exec-URL */
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbxlSfWyUCSKAJIKM3kkTsLEdWSRi2rUhuzx6nf7eyRW0pUu16ge9FQCC7GCloyIHuEc/exec?mode=json";
+  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbw2xHbCuYRLLZAGJW0NZT0SjKPcaoMh9lsegRU47a5ATCcXcncWx6skH6m4IFKPTazl-w/exec?mode=json";
 
   /* I18N */
   let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
   const T = {
-    nl:{ title:"Belgapom – Notering", subtitle:"Contractprijzen en wekelijkse notering (vrije aardappelen)",
+    nl:{ title:"Belgapom – Notering", subtitle:"Contractprijzen en wekelijkse notering (vrije aardappelen excl. BTW)",
       current_period_title:"Huidige periode",
       kpi_quote:"Notering", kpi_week:"Week", kpi_date:"Datum", kpi_sentiment:"Marktstemming",
       last_update_label:"Laatste update", source:"Bron: interne rapportering",
@@ -291,7 +293,7 @@
       pdf_download:"Download PDF", print_label:"Print",
       price_note:"Prijzen van vrije aardappelen excl. btw"
     },
-    fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libres)",
+    fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libre hors TVA)",
       current_period_title:"Période actuelle",
       kpi_quote:"Cotation", kpi_week:"Semaine", kpi_date:"Date", kpi_sentiment:"Tendance du marché",
       last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
@@ -316,7 +318,7 @@
       pdf_download:"Télécharger PDF", print_label:"Imprimer",
       price_note:"Prix des pommes de terre libres (hors TVA)"
     },
-    en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes)",
+    en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes without VAT)",
       current_period_title:"Current period",
       kpi_quote:"Quotation", kpi_week:"Week", kpi_date:"Date", kpi_sentiment:"Market sentiment",
       last_update_label:"Last update", source:"Source: internal reporting",
@@ -426,10 +428,20 @@
       const sentEl   = document.getElementById('kpi-sentiment-' + variety);
       const noticeEl = document.getElementById('noQuoteNotice' + (variety.charAt(0).toUpperCase() + variety.slice(1)));
       if(!quoteEl) return;
-      // Determine notering value for this variety; fall back to general notering if needed
+      // Determine quotation value for this variety. Do **not** fall back to the general
+      // quotation (`r.notering`). When no specific quotation is available for a variety,
+      // leave the value null so that the UI can show a notice indicating the absence
+      // of a quotation due to lack of transactions. This prevents the price of one
+      // variety from accidentally appearing for the other.
       let v;
-      if (variety==='fontane') v = (r.notering_fontane != null ? r.notering_fontane : r.notering);
-      else if (variety==='challenger') v = (r.notering_challenger != null ? r.notering_challenger : r.notering);
+      if (variety==='fontane') {
+        v = r.notering_fontane;
+      } else if (variety==='challenger') {
+        v = r.notering_challenger;
+      } else {
+        // Fallback only for scenarios where no variety is specified (rare)
+        v = r.notering;
+      }
       const val = toNum(v);
       quoteEl.textContent = euro(val);
       weekEl.textContent  = String(r.week_num).padStart(2,'0');
