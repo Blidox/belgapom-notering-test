@@ -5,838 +5,735 @@
   <link rel="icon" type="image/svg+xml" href="assets/Asset%201.svg">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Belgapom – Notering / Cotation / Quotation</title>
-  <!-- Consent-based Google Analytics loader -->
+
   <script>
     const GA_MEASUREMENT_ID = 'G-V82735518J';
-
     function loadGAOnce() {
-      if (window.gaLoaded) return;
-      window.gaLoaded = true;
-
-      // 1) gtag.js script injecteren
-      const gtagScript = document.createElement('script');
-      gtagScript.async = true;
-      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
-      document.head.appendChild(gtagScript);
-
-      // 2) gtag configuren
+      if (window.gaLoaded) return; window.gaLoaded = true;
+      const s = document.createElement('script'); s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+      document.head.appendChild(s);
       window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
-      window.gtag = gtag;
-
-      gtag('js', new Date());
-      gtag('config', GA_MEASUREMENT_ID, {
-        anonymize_ip: true
-      });
+      function gtag(){ dataLayer.push(arguments); } window.gtag = gtag;
+      gtag('js', new Date()); gtag('config', GA_MEASUREMENT_ID, { anonymize_ip: true });
     }
   </script>
 
-  <!-- UI libs -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- UI libs -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Paralucent: plaats je .woff2 bestanden in /assets/fonts/ -->
+  <style>
+    @font-face { font-family: 'Paralucent'; src: url('assets/fonts/paralucent-light.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Paralucent'; src: url('assets/fonts/paralucent-regular.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Paralucent'; src: url('assets/fonts/paralucent-medium.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Paralucent'; src: url('assets/fonts/paralucent-demibold.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Paralucent'; src: url('assets/fonts/paralucent-bold.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
+    @font-face { font-family: 'Paralucent'; src: url('assets/fonts/paralucent-heavy.woff2') format('woff2'); font-weight: 800; font-style: normal; font-display: swap; }
+  </style>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <!-- PDF (print-friendly export) -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
-    :root{
-      --brand-primary:#FFCA00; --brand-neutral:#3f3f3f; --accent-quote:#2aa36b;
-      --bg:#f7f7f8; --ink:#111827; --muted:#6b7280; --card:#ffffff; --line:#e5e7eb;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand: #FFCA00;
+      --brand-hover: #e6b600;
+      --dark: #3f3f3f;
+      --ink: #1a1a1a;
+      --body: #4a4a4a;
+      --muted: #707070;
+      --faint: #888888;
+      --line: #e8e8e8;
+      --surface: #f5f5f3;
+      --card: #ffffff;
+      --red: #c0392b;
+      --green: #2aa36b;
+      --accent-bg: rgba(255,202,0,.06);
+      --font: 'Paralucent', 'Segoe UI', system-ui, sans-serif;
+      --mono: 'IBM Plex Mono', ui-monospace, monospace;
+      --max-w: 1320px;
+      --radius: 20px;
+      --radius-sm: 12px;
     }
-    html,body{ background:var(--bg); color:var(--ink); }
-    .btn{ padding:.55rem .8rem; border-radius:0.75rem; border:1px solid var(--line); background:var(--card); font-size:.95rem }
-    .btn-active{ background:var(--brand-primary); color:#1a1a1a; border-color:transparent; font-weight:700; }
-    .chip{ display:inline-block; padding:.25rem .75rem; border-radius:999px; font-size:.78rem; font-weight:700 }
-    .chip-green{ background:var(--accent-quote); color:white; }
-    .chip-slate{ background:#475569; color:white; }
-    .chip-red{ background:#b91c1c; color:white; }
-    .kpi{ font-size:clamp(1.15rem, 2.6vw, 1.5rem); font-weight:800 }
-    /* Highlight the notering value so it stands out */
-    #kpi-quote,
-    #kpi-quote-fontane,
-    #kpi-quote-challenger{
-      color:var(--accent-quote);
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { font-family: var(--font); background: var(--surface); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+    /* ═══ HEADER (light) ═══ */
+    .header {
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 50;
     }
-    .spinner{ width:22px;height:22px;border:3px solid rgba(0,0,0,.15);border-top-color:rgba(0,0,0,.6);border-radius:50%;animation:spin .9s linear infinite;}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85);backdrop-filter:blur(2px)}
-    .loading-hidden{display:none!important}
-    .notice{background:#fff7d6;border:1px solid #f2e4a3;color:#5b4a00;padding:.5rem .75rem;border-radius:.75rem;font-size:.9rem}
-    @media print { .no-print { display:none !important } }
+    .header-inner {
+      max-width: var(--max-w); margin: 0 auto; padding: .65rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    }
+    .header-left { display: flex; align-items: center; gap: .85rem; }
+    .header-left img { height: 30px; width: auto; transition: opacity .2s; }
+    .header-left img:hover { opacity: .7; }
+    .header-left h1 { font-size: 1rem; font-weight: 700; letter-spacing: -.01em; color: var(--ink); }
+    .header-left p { font-size: .72rem; color: var(--muted); font-weight: 400; }
+    .header-right { display: flex; gap: .35rem; align-items: center; flex-wrap: wrap; }
+
+    .hbtn {
+      padding: .3rem .65rem; border-radius: 8px; border: 1px solid var(--line);
+      background: var(--card); color: var(--body);
+      font-family: var(--font); font-size: .78rem; font-weight: 500; cursor: pointer; transition: all .15s;
+    }
+    .hbtn:hover { background: var(--surface); border-color: var(--faint); }
+    .hbtn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+    .hbtn-active { background: var(--brand) !important; color: var(--ink) !important; border-color: var(--brand) !important; font-weight: 700; }
+    .hbtn-cta { background: var(--brand); color: var(--ink); border-color: var(--brand); font-weight: 600; }
+    .hbtn-cta:hover { background: var(--brand-hover); }
+    @media (max-width: 640px) { .hbtn-desktop { display: none; } }
+
+    /* ═══ HERO ═══ */
+    .hero { background: var(--card); border-bottom: 1px solid var(--line); }
+    .hero-inner { max-width: var(--max-w); margin: 0 auto; padding: 1.5rem 1.5rem 1.25rem; }
+    .hero-top { display: flex; align-items: center; justify-content: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .hero-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -.03em; }
+    .hero-title span { color: var(--brand); }
+
+    .season-select-wrap {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius-sm); padding: .3rem .3rem .3rem .85rem;
+    }
+    .season-select-wrap label { font-size: .78rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+    .season-select-wrap select {
+      font-family: var(--font); font-size: .82rem; font-weight: 700;
+      padding: .35rem .65rem; border: none; border-radius: 8px;
+      background: var(--card); color: var(--ink); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    }
+
+    .explainer {
+      background: var(--surface); border-left: 4px solid var(--brand);
+      padding: .85rem 1.15rem; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: .95rem; color: var(--body); line-height: 1.65;
+      margin-bottom: 1.25rem;
+    }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+
+    .kpi-card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      position: relative; overflow: hidden;
+    }
+    .kpi-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; background: var(--brand); border-radius: 0 4px 4px 0;
+    }
+    .kpi-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .65rem; }
+    .kpi-variety { font-size: .95rem; font-weight: 800; }
+    .kpi-week-badge {
+      font-family: var(--mono); font-size: .7rem; font-weight: 600;
+      background: var(--brand); color: var(--ink); padding: .2rem .6rem; border-radius: 6px;
+    }
+    .kpi-row { display: grid; grid-template-columns: auto auto auto; gap: 1.5rem; align-items: start; }
+    .kpi-label { font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .1rem; }
+    .kpi-value { font-family: var(--mono); font-size: 1.75rem; font-weight: 700; line-height: 1.1; color: var(--brand); }
+    .kpi-secondary .kpi-value { font-size: .95rem; color: var(--body); }
+    .kpi-sentiment { display: inline-block; padding: .2rem .6rem; border-radius: 999px; font-size: .68rem; font-weight: 700; letter-spacing: .02em; margin-top: .15rem; }
+    .chip-green { background: var(--green); color: #fff; }
+    .chip-slate { background: #5a6577; color: #fff; }
+    .chip-red { background: var(--red); color: #fff; }
+
+    .notice { background: #fef9e7; border: 1px solid #f7dc6f; color: #7d6608; padding: .45rem .85rem; border-radius: 8px; font-size: .78rem; font-weight: 500; margin-top: .5rem; }
+    .notice.hidden { display: none; }
+
+    /* ═══ CHART ═══ */
+    .chart-section { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; }
+    .chart-block {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); margin-top: 1.5rem; overflow: hidden;
+    }
+    .chart-block-header { padding: 1rem 1.5rem .75rem; display: flex; align-items: baseline; gap: .75rem; border-bottom: 1px solid var(--line); }
+    .chart-block-title { font-size: 1.15rem; font-weight: 800; letter-spacing: -.02em; padding-left: .75rem; border-left: 4px solid var(--brand); }
+    .chart-block-subtitle { font-size: .82rem; color: var(--muted); font-weight: 500; }
+    .chart-canvas-wrap { position: relative; height: 480px; padding: 0 1rem 1rem; }
+    @media (min-width: 768px) { .chart-canvas-wrap { height: 540px; } }
+    @media (min-width: 1100px) { .chart-canvas-wrap { height: 580px; } }
+
+    .loading-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.92); backdrop-filter: blur(4px); }
+    .loading-hidden { display: none !important; }
+    .spinner { width: 22px; height: 22px; border: 3px solid var(--line); border-top-color: var(--brand); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: .82rem; color: var(--muted); margin-left: .6rem; font-weight: 500; }
+
+    /* ═══ TABLES ═══ */
+    .tables-section { max-width: var(--max-w); margin: 0 auto; padding: 1.5rem 1.5rem 0; }
+    .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    @media (max-width: 960px) { .tables-grid { grid-template-columns: 1fr; } }
+    .table-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .table-card-header { padding: .85rem 1.25rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--brand); }
+    .table-card-title { font-size: .9rem; font-weight: 700; padding-left: .6rem; border-left: 3px solid var(--brand); }
+    .table-season-tag { font-family: var(--mono); font-size: .68rem; font-weight: 600; color: var(--muted); background: var(--surface); padding: .15rem .55rem; border-radius: 6px; }
+    .table-scroll { position: relative; max-height: 460px; overflow: auto; }
+    .dtable { width: 100%; border-collapse: collapse; }
+    .dtable thead { position: sticky; top: 0; z-index: 2; }
+    .dtable th { text-align: left; padding: .6rem .85rem; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); background: var(--surface); border-bottom: 1px solid var(--line); }
+    .dtable td { padding: .5rem .85rem; font-size: .82rem; border-bottom: 1px solid rgba(0,0,0,.04); font-variant-numeric: tabular-nums; color: var(--body); }
+    .dtable tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
+    .dtable tbody tr:hover { background: var(--accent-bg); }
+    .dtable tbody tr:last-child td { border-bottom: none; }
+    .dtable .td-quote { font-family: var(--mono); font-weight: 700; color: var(--ink); text-decoration: underline; text-decoration-color: var(--brand); text-underline-offset: 3px; text-decoration-thickness: 3px; }
+
+    /* ═══ FOOTER ═══ */
+    .info-footer { max-width: var(--max-w); margin: 0 auto; padding: 1.5rem 1.5rem 2rem; }
+    .info-footer-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.25rem; }
+    @media (max-width: 960px) { .info-footer-grid { grid-template-columns: 1fr; } }
+    .info-block { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem; }
+    .info-block h3 { font-size: 1rem; font-weight: 800; margin-bottom: .75rem; }
+    .info-block p, .info-block li { font-size: .88rem; color: var(--body); line-height: 1.65; }
+    .legend-list { list-style: none; display: grid; gap: .5rem; }
+    .legend-list li { padding-left: .85rem; position: relative; }
+    .legend-list li::before { content: ''; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); }
+
+    /* ═══ PRIMEURS ═══ */
+    .primeurs-section { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem 1rem; }
+    .primeurs-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+    .primeurs-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
+    .primeurs-header h3 { font-size: 1rem; font-weight: 800; }
+    .primeurs-header p { font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    .primeur-tabs-wrap { padding: .75rem 1.25rem; border-bottom: 1px solid var(--line); display: flex; gap: .35rem; flex-wrap: wrap; }
+    .primeur-table-wrap { padding: .75rem 1.25rem 1rem; }
+
+    /* ═══ MOBILE BAR ═══ */
+    .mobile-bar {
+      position: fixed; bottom: .75rem; left: .75rem; right: .75rem; z-index: 40;
+      display: flex; gap: .5rem; padding: .5rem;
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: 0 8px 30px rgba(0,0,0,.12);
+    }
+    .mobile-bar button { flex: 1; }
+    @media (min-width: 768px) { .mobile-bar { display: none; } }
+
+    /* ═══ BACK TO TOP ═══ */
+    .back-to-top {
+      position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 35;
+      width: 44px; height: 44px;
+      border-radius: 50%; border: 1px solid var(--line);
+      background: var(--card); color: var(--dark);
+      box-shadow: 0 4px 16px rgba(0,0,0,.1);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s, transform .25s;
+      transform: translateY(8px);
+    }
+    .back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .back-to-top:hover { background: var(--brand); border-color: var(--brand); }
+    @media (max-width: 768px) {
+      .back-to-top { bottom: 4.5rem; right: .75rem; width: 40px; height: 40px; }
+    }
+
+    /* ═══ ANIMATIONS ═══ */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .anim-in { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) both; }
+    .anim-d1 { animation-delay: .05s; } .anim-d2 { animation-delay: .12s; }
+    .anim-d3 { animation-delay: .2s; } .anim-d4 { animation-delay: .28s; }
+
+    /* ═══ PRINT ═══ */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .no-print, .mobile-bar { display: none !important; }
+      .header { position: relative; }
+      body { background: #fff !important; font-size: 13px; }
+      .hero { border-bottom: 2px solid #ddd; }
+      .hero-inner, .chart-section, .tables-section, .info-footer, .primeurs-section {
+        max-width: 100%; padding-left: 1rem; padding-right: 1rem;
+      }
+      .hero, .chart-block, .table-card, .info-block, .primeurs-card {
+        box-shadow: none !important; border: 1px solid #ccc !important;
+        border-radius: 8px !important;
+      }
+      .chart-canvas-wrap { height: 340px !important; }
+      .kpi-grid { gap: .75rem; }
+      .kpi-card { padding: .75rem 1rem; }
+      .kpi-card::before { background: var(--brand) !important; }
+      .tables-grid { grid-template-columns: 1fr !important; gap: .75rem; }
+      .table-scroll { max-height: none !important; overflow: visible !important; }
+      .table-card-header { border-bottom-color: var(--brand) !important; }
+      .info-footer-grid { grid-template-columns: 1fr !important; gap: .75rem; }
+      .chart-block { page-break-inside: avoid; margin-top: 1rem; }
+      .table-card { page-break-inside: avoid; }
+      .info-block { page-break-inside: avoid; }
+      .anim-in { animation: none !important; opacity: 1 !important; }
+    }
+
+    @media (max-width: 640px) {
+      .kpi-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 1.25rem; }
+      .hero-inner { padding: 1.25rem 1rem 1rem; }
+      .kpi-value { font-size: 1.4rem; }
+      .kpi-row { grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+      .kpi-label { font-size: .6rem; }
+      .kpi-secondary .kpi-value { font-size: .85rem; }
+      .explainer { font-size: .85rem; padding: .65rem .85rem; line-height: 1.55; }
+      .header-inner { padding: .5rem 1rem; }
+      .header-left h1 { font-size: .85rem; }
+      .header-left p { display: none; }
+      .chart-section, .tables-section, .info-footer, .primeurs-section { padding-left: .75rem; padding-right: .75rem; }
+      .chart-block-header { padding: .75rem 1rem .5rem; }
+      .chart-block-title { font-size: 1rem; }
+      .chart-canvas-wrap { height: 380px; padding: 0 .5rem .75rem; }
+      .table-card-header { padding: .65rem 1rem; }
+      .dtable td, .dtable th { padding: .4rem .5rem; font-size: .75rem; }
+      .info-block { padding: 1rem; }
+      .info-block h3 { font-size: .9rem; }
+      .info-block p, .info-block li { font-size: .82rem; }
+      .season-select-wrap { padding: .25rem .25rem .25rem .65rem; }
+      .season-select-wrap label { font-size: .72rem; }
+      .season-select-wrap select { font-size: .78rem; padding: .3rem .5rem; }
+      .mobile-bar { bottom: .5rem; left: .5rem; right: .5rem; }
+    }
   </style>
 </head>
 <body>
-  <!-- Topbar -->
-  <header class="sticky top-0 z-20 border-b bg-white/90 backdrop-blur" style="border-color:var(--line)">
-    <div class="max-w-6xl mx-auto px-3 md:px-4 py-2 md:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <a href="https://belgapom.be" target="_blank" rel="noopener">
-  <img src="assets/belgapom-logo.svg" alt="Belgapom" class="h-8 w-auto hover:opacity-80 transition"/>
-</a>
-        <div>
-          <h1 id="title" class="font-semibold text-base md:text-lg">Belgapom – Notering</h1>
-          <p id="subtitle" class="text-xs md:text-sm" style="color:var(--muted)">Contractprijzen en wekelijkse notering (vrije aardappelen excl. btw)</p>
-        </div>
-      </div>
-      <div class="flex flex-wrap gap-1 md:gap-2 no-print mt-2 sm:mt-0">
-        <button id="btn-nl" class="btn">NL</button>
-        <button id="btn-fr" class="btn">FR</button>
-        <button id="btn-en" class="btn">EN</button>
-        <button id="btn-print" class="btn hidden md:inline-flex" data-i18n="print_label">Print</button>
-        <button id="btn-pdf" class="btn hidden md:inline-flex" style="background:var(--brand-primary);border-color:transparent;color:#1a1a1a" data-i18n="pdf_download">Download PDF</button>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <a href="https://belgapom.be" target="_blank" rel="noopener"><img src="assets/belgapom-logo.svg" alt="Belgapom" /></a>
+      <div>
+        <h1 id="title">Belgapom – Notering</h1>
+        <p id="subtitle">Contractprijzen en wekelijkse notering (vrije aardappelen excl. BTW)</p>
       </div>
     </div>
-  </header>
-
-  <!-- Content -->
-  <main class="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-6 grid md:grid-cols-3 gap-4 md:gap-6" id="contentRoot" aria-live="polite">
-    <!-- Left -->
-    <section class="md:col-span-2 space-y-4">
-      <div class="rounded-2xl shadow-sm" style="background:var(--card); border:1px solid var(--line);">
-        <!-- Head -->
-        <div class="p-3 md:p-4 flex items-center gap-2 border-b" style="border-color:var(--line)">
-          <label for="seasonSelect" data-i18n="season_label" class="whitespace-nowrap text-xs md:text-sm">Seizoen:</label>
-          <select id="seasonSelect" class="border rounded px-2 py-1"></select>
-        </div>
-
-        <!-- Info and charts for each variety -->
-        <div>
-          <!-- Info + chart: Fontane -->
-          <div class="border-b" style="border-color:var(--line)">
-            <div class="p-3 md:p-4 flex items-center justify-between gap-3">
-              <div class="flex-1">
-                <h2 class="text-base md:text-lg font-semibold">Fontane</h2>
-                <div id="seasonLabelVarietyFontane" class="text-xs md:text-sm" style="color:var(--muted)"></div>
-              </div>
-            </div>
-            <div class="p-3 md:p-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-sm">
-              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_quote">Notering</div><div id="kpi-quote-fontane" class="kpi">–</div></div>
-              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_week">Week</div><div id="kpi-week-fontane" class="kpi">–</div></div>
-              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_date">Datum</div><div id="kpi-date-fontane" class="kpi">–</div></div>
-              <div class="col-span-2 md:col-span-1">
-                <div class="text-xs" style="color:var(--muted)" data-i18n="kpi_sentiment">Marktstemming</div>
-                <span id="kpi-sentiment-fontane" class="chip chip-slate mt-1">–</span>
-              </div>
-            </div>
-            <div id="noQuoteNoticeFontane" class="mx-3 md:mx-4 mb-3 notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
-            <div class="relative h-[340px] md:h-[440px] px-2 pb-2">
-              <canvas id="chart" aria-label="Grafiek contractprijs &amp; notering Fontane" role="img"></canvas>
-              <div id="chartLoader" class="loading-overlay">
-                <div class="flex items-center gap-2 text-sm">
-                  <div class="spinner" aria-hidden="true"></div>
-                  <span id="chartLoaderText">Data laden…</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Info + chart: Challenger -->
-          <div>
-            <div class="p-3 md:p-4 flex items-center justify-between gap-3">
-              <div class="flex-1">
-                <h2 class="text-base md:text-lg font-semibold">Challenger</h2>
-                <div id="seasonLabelVarietyChallenger" class="text-xs md:text-sm" style="color:var(--muted)"></div>
-              </div>
-            </div>
-            <div class="p-3 md:p-4 grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 text-sm">
-              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_quote">Notering</div><div id="kpi-quote-challenger" class="kpi">–</div></div>
-              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_week">Week</div><div id="kpi-week-challenger" class="kpi">–</div></div>
-              <div><div class="text-xs" style="color:var(--muted)" data-i18n="kpi_date">Datum</div><div id="kpi-date-challenger" class="kpi">–</div></div>
-              <div class="col-span-2 md:col-span-1">
-                <div class="text-xs" style="color:var(--muted)" data-i18n="kpi_sentiment">Marktstemming</div>
-                <span id="kpi-sentiment-challenger" class="chip chip-slate mt-1">–</span>
-              </div>
-            </div>
-            <div id="noQuoteNoticeChallenger" class="mx-3 md:mx-4 mb-3 notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
-            <div class="relative h-[340px] md:h-[440px] px-2 pb-2">
-              <canvas id="chart2" aria-label="Grafiek contractprijs &amp; notering Challenger" role="img"></canvas>
-              <div id="chart2Loader" class="loading-overlay">
-                <div class="flex items-center gap-2 text-sm">
-                  <div class="spinner" aria-hidden="true"></div>
-                  <span id="chart2LoaderText">Data laden…</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Legende marktstemming -->
-        <div class="p-3 md:p-4 border-t" style="border-color:var(--line)">
-          <h3 class="font-semibold mb-2 text-sm md:text-base" data-i18n="legend_title">Legende marktstemming</h3>
-          <ul class="list-disc pl-5 space-y-1 text-sm" id="legend_list"></ul>
-        </div>
-
-        <!-- Reglementering -->
-        <div class="p-3 md:p-4 border-t text-sm md:text-[15px] leading-relaxed" style="border-color:var(--line)">
-          <h3 class="font-semibold mb-2 text-sm md:text-base" data-i18n="rules_title">Reglementering &amp; toelichting</h3>
-          <div id="rules_body"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Right -->
-    <aside class="space-y-4">
-      <div class="rounded-2xl shadow-sm p-3 md:p-4 text-sm" style="background:var(--card); border:1px solid var(--line)">
-        <p class="mb-1"><span data-i18n="last_update_label">Laatste update</span>: <span id="lastUpdate">–</span></p>
-        <p class="mb-1" data-i18n="source" style="color:var(--muted)">Bron: interne rapportering</p>
-        <!-- Note about prices (free potatoes excl. VAT) -->
-        <p class="mb-1 text-xs" data-i18n="price_note" style="color:var(--muted)"></p>
-        <p class="text-xs">© <span id="year"></span> Belgapom</p>
-      </div>
-
-      <!-- Table for Fontane -->
-      <div class="rounded-2xl shadow-sm p-3 md:p-4" style="background:var(--card); border:1px solid var(--line)">
-        <div class="flex items-center justify-between gap-2">
-          <strong id="tableTitle1" data-i18n="table_title_fontane">Overzicht per week – Fontane</strong>
-          <div class="text-xs md:text-sm" id="tableSeason" style="color:var(--muted)"></div>
-        </div>
-        <div class="relative max-h-[360px] md:max-h-[520px] overflow-auto mt-3 rounded-lg ring-1" style="--tw-ring-color:var(--line)">
-          <div id="tableLoader" class="loading-overlay">
-            <div class="flex items-center gap-2 text-sm">
-              <div class="spinner" aria-hidden="true"></div>
-              <span id="tableLoaderText">Tabel laden…</span>
-            </div>
-          </div>
-          <table class="w-full text-[13px] md:text-sm">
-            <thead class="sticky top-0" style="background:var(--card); color:var(--muted); border-bottom:1px solid var(--line)">
-              <tr>
-                <th class="text-left py-2 px-2" data-i18n="th_week">Week</th>
-                <th class="text-left py-2 px-2" data-i18n="th_date">Datum (vr)</th>
-                <th class="text-left py-2 px-2" data-i18n="th_contract">Contract</th>
-                <th class="text-left py-2 px-2" data-i18n="th_quote">Notering</th>
-                <!-- New column: market sentiment -->
-                <th class="text-left py-2 px-2" data-i18n="th_sentiment">Marktstemming</th>
-              </tr>
-            </thead>
-            <tbody id="tbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Table for Challenger -->
-      <div class="rounded-2xl shadow-sm p-3 md:p-4 mt-4" style="background:var(--card); border:1px solid var(--line)">
-        <div class="flex items-center justify-between gap-2">
-          <strong id="tableTitle2" data-i18n="table_title_challenger">Overzicht per week – Challenger</strong>
-          <div class="text-xs md:text-sm" id="tableSeason2" style="color:var(--muted)"></div>
-        </div>
-        <div class="relative max-h-[360px] md:max-h-[520px] overflow-auto mt-3 rounded-lg ring-1" style="--tw-ring-color:var(--line)">
-          <div id="table2Loader" class="loading-overlay">
-            <div class="flex items-center gap-2 text-sm">
-              <div class="spinner" aria-hidden="true"></div>
-              <span id="table2LoaderText">Tabel laden…</span>
-            </div>
-          </div>
-          <table class="w-full text-[13px] md:text-sm">
-            <thead class="sticky top-0" style="background:var(--card); color:var(--muted); border-bottom:1px solid var(--line)">
-              <tr>
-                <th class="text-left py-2 px-2" data-i18n="th_week">Week</th>
-                <th class="text-left py-2 px-2" data-i18n="th_date">Datum (vr)</th>
-                <th class="text-left py-2 px-2" data-i18n="th_contract">Contract</th>
-                <th class="text-left py-2 px-2" data-i18n="th_quote">Notering</th>
-                <!-- New column: market sentiment -->
-                <th class="text-left py-2 px-2" data-i18n="th_sentiment">Marktstemming</th>
-              </tr>
-            </thead>
-            <tbody id="tbody2"></tbody>
-          </table>
-        </div>
-      </div>
-    </aside>
-  </main>
-
-  <!-- PRIMEURS (TABBLADEN + TABEL, geen grafiek) -->
-  <section class="max-w-6xl mx-auto px-3 md:px-4 pb-8" id="primeursSection" style="display:none">
-    <div class="rounded-2xl shadow-sm" style="background:var(--card); border:1px solid var(--line);">
-      <div class="p-3 md:p-4 border-b" style="border-color:var(--line)">
-        <h3 class="font-semibold text-base md:text-lg" data-i18n="primeurs_title">Historiek primeurs</h3>
-        <p class="text-xs md:text-sm mt-1" style="color:var(--muted)"><span data-i18n="primeurs_hint">Periode 15 juli – 15 september;.</span></p>
-      </div>
-      <div class="p-3 md:p-4 border-b" style="border-color:var(--line)">
-        <div id="primeurTabs" class="flex flex-wrap gap-2"></div>
-      </div>
-      <div class="p-3 md:p-4">
-        <div class="relative max-h-[360px] md:max-h-[520px] overflow-auto rounded-lg ring-1" style="--tw-ring-color:var(--line)">
-          <div id="primeursTableLoader" class="loading-overlay loading-hidden">
-            <div class="flex items-center gap-2 text-sm">
-              <div class="spinner"></div>
-              <span id="primeursTableLoaderText">Tabel laden…</span>
-            </div>
-          </div>
-          <table class="w-full text-[13px] md:text-sm">
-            <thead class="sticky top-0" style="background:var(--card); color:var(--muted); border-bottom:1px solid var(--line)">
-              <tr>
-                <th class="text-left py-2 px-2" data-i18n="primeurs_th_week">Week</th>
-                <th class="text-left py-2 px-2" data-i18n="primeurs_th_date">Datum</th>
-                <th class="text-left py-2 px-2" data-i18n="primeurs_th_quote">Notering</th>
-              </tr>
-            </thead>
-            <tbody id="primeursTbody"></tbody>
-          </table>
-        </div>
-      </div>
+    <div class="header-right no-print">
+      <button id="btn-nl" class="hbtn">NL</button>
+      <button id="btn-fr" class="hbtn">FR</button>
+      <button id="btn-en" class="hbtn">EN</button>
+      <div style="width:1px;height:20px;background:var(--line);margin:0 .25rem" class="hbtn-desktop"></div>
+      <button id="btn-pdf" class="hbtn hbtn-cta hbtn-desktop" data-i18n="pdf_download">Download PDF</button>
     </div>
-  </section>
+  </div>
+</header>
 
-  <!-- Mobile sticky actions -->
-  <div class="fixed bottom-3 inset-x-0 px-3 md:hidden no-print z-30">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex gap-2 p-2 rounded-2xl shadow-lg" style="background:var(--card); border:1px solid var(--line)">
-        <button id="m-print" class="flex-1 btn" data-i18n="print_label">Print</button>
-        <button id="m-pdf" class="flex-1 btn-active" data-i18n="pdf_download" style="background:var(--brand-primary);border-color:transparent;color:#1a1a1a">Download PDF</button>
+<!-- HERO -->
+<section class="hero anim-in" id="heroSection">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
+        <div class="hero-title" id="heroTitle">Wekelijkse <span>Notering</span></div>
+        <div class="season-select-wrap no-print">
+          <label for="seasonSelect" data-i18n="season_label">Seizoen:</label>
+          <select id="seasonSelect"></select>
+        </div>
+      </div>
+      <span id="lastUpdate" style="display:none"></span>
+    </div>
+    <div class="explainer" id="explainerText">Elke vrijdagochtend noteert Belgapom, op basis van cijfers van handelaars en verwerkers, de meest gehanteerde prijs voor vrije aardappelen (excl. BTW) op de Belgische markt. De notering bevat ook een marktstemming. Naast de notering toont de grafiek de evolutie van de gemiddelde contractprijzen.</div>
+    <div class="kpi-grid">
+      <div class="kpi-card anim-in anim-d1">
+        <div class="kpi-card-header"><div class="kpi-variety">Fontane</div><div class="kpi-week-badge">W<span id="kpi-week-fontane">–</span></div></div>
+        <div class="kpi-row">
+          <div class="kpi-main"><div class="kpi-label" data-i18n="kpi_quote">Notering</div><div class="kpi-value" id="kpi-quote-fontane">–</div></div>
+          <div class="kpi-secondary"><div class="kpi-label" data-i18n="kpi_date">Datum</div><div class="kpi-value" id="kpi-date-fontane">–</div></div>
+          <div class="kpi-secondary"><div class="kpi-label" data-i18n="kpi_sentiment">Marktstemming</div><span id="kpi-sentiment-fontane" class="kpi-sentiment chip-slate">–</span></div>
+        </div>
+        <div id="noQuoteNoticeFontane" class="notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
+      </div>
+      <div class="kpi-card anim-in anim-d2">
+        <div class="kpi-card-header"><div class="kpi-variety">Challenger</div><div class="kpi-week-badge">W<span id="kpi-week-challenger">–</span></div></div>
+        <div class="kpi-row">
+          <div class="kpi-main"><div class="kpi-label" data-i18n="kpi_quote">Notering</div><div class="kpi-value" id="kpi-quote-challenger">–</div></div>
+          <div class="kpi-secondary"><div class="kpi-label" data-i18n="kpi_date">Datum</div><div class="kpi-value" id="kpi-date-challenger">–</div></div>
+          <div class="kpi-secondary"><div class="kpi-label" data-i18n="kpi_sentiment">Marktstemming</div><span id="kpi-sentiment-challenger" class="kpi-sentiment chip-slate">–</span></div>
+        </div>
+        <div id="noQuoteNoticeChallenger" class="notice hidden" data-i18n="no_quote_notice">Geen notering wegens gebrek aan transacties</div>
       </div>
     </div>
   </div>
+</section>
 
-  <script>
-  /* >>> VERVANG door jouw exec-URL */
-  const APP_SCRIPT_JSON_URL = "https://script.google.com/macros/s/AKfycbzitf4kBtyoB3pC0dPsrhWgdP3kkMRTmlHqQqxOlExaYEHIN0Av3ZgE6bKVh1XCr7ac/exec?mode=json";
+<!-- CHARTS -->
+<div class="chart-section" id="contentRoot">
+  <div class="chart-block anim-in anim-d2" id="fontaneCard">
+    <div class="chart-block-header"><div class="chart-block-title">Fontane</div><div class="chart-block-subtitle" id="seasonLabelVarietyFontane"></div></div>
+    <div class="chart-canvas-wrap">
+      <canvas id="chart" aria-label="Grafiek Fontane" role="img"></canvas>
+      <div id="chartLoader" class="loading-overlay"><div style="display:flex;align-items:center"><div class="spinner"></div><span class="loader-text" id="chartLoaderText">Data laden…</span></div></div>
+    </div>
+  </div>
+  <div class="chart-block anim-in anim-d3" id="challengerCard">
+    <div class="chart-block-header"><div class="chart-block-title">Challenger</div><div class="chart-block-subtitle" id="seasonLabelVarietyChallenger"></div></div>
+    <div class="chart-canvas-wrap">
+      <canvas id="chart2" aria-label="Grafiek Challenger" role="img"></canvas>
+      <div id="chart2Loader" class="loading-overlay"><div style="display:flex;align-items:center"><div class="spinner"></div><span class="loader-text" id="chart2LoaderText">Data laden…</span></div></div>
+    </div>
+  </div>
+</div>
 
-  /* I18N */
-  let LANG = (new URLSearchParams(location.search).get('lang')) || 'nl';
-  const T = {
-    nl:{ title:"Belgapom – Notering", subtitle:"Contractprijzen en wekelijkse notering (vrije aardappelen excl. BTW)",
-      current_period_title:"Huidige periode",
-      kpi_quote:"Notering", kpi_week:"Week", kpi_date:"Datum", kpi_sentiment:"Marktstemming",
-      last_update_label:"Laatste update", source:"Bron: interne rapportering",
-      table_title:"Overzicht per week", th_week:"Week", th_date:"Datum (vr)", th_contract:"Contract", th_quote:"Notering", th_sentiment:"Marktstemming",
-      table_title_fontane:"Overzicht per week – Fontane", table_title_challenger:"Overzicht per week – Challenger",
-      legend_title:"Legende marktstemming",
-      legend_items:["Flauw — aanbod is groter dan de vraag","Rustig — aanbod is groter dan of gelijk aan de vraag","Stabiel — aanbod is gelijk aan de vraag (evenwicht)","Prijshoudend — aanbod is kleiner dan of gelijk aan de vraag","Vast — aanbod is kleiner dan de vraag"],
-      rules_title:"Reglementering & toelichting",
-      rules_body:[
-        "Vrije markt en contracten in de Belgische diepvriesfrietsector:",
-        "De wekelijkse Belgapomnotering voor vroege aardappelen (juli–augustus) en voor Fontane & Challenger (bewaarseizoen) geeft een duidelijke indicatie van de evolutie op de vrije aardappelmarkt.",
-        "Daarnaast maken telers, handel en verwerking gebruik van teeltcontracten voor prijsstabiliteit.",
-        "Daarom toont de grafiek naast de notering ook de evolutie van contractprijzen."
-      ],
-      loading_chart:"Data laden…", loading_table:"Tabel laden…", loading_error:"Kon data niet laden: ",
-      no_quote_notice:"Geen notering wegens gebrek aan transacties",
-      season_label:"Seizoen",
-      primeurs_title:"Historiek primeurs",
-      primeurs_hint:"Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.",
-      primeurs_th_week:"Week", primeurs_th_date:"Datum", primeurs_th_quote:"Notering",
-      dataset_label_fontane:"Notering Fontane (€/t)", dataset_label_challenger:"Notering Challenger (€/t)",
-      pdf_download:"Download PDF", print_label:"Print",
-      price_note:"Prijzen van vrije aardappelen excl. btw"
-    },
-    fr:{ title:"Belgapom – Cotation", subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libre hors TVA)",
-      current_period_title:"Période actuelle",
-      kpi_quote:"Cotation", kpi_week:"Semaine", kpi_date:"Date", kpi_sentiment:"Tendance du marché",
-      last_update_label:"Dernière mise à jour", source:"Source : reporting interne",
-      table_title:"Aperçu par semaine", th_week:"Semaine", th_date:"Date (ven)", th_contract:"Contrat", th_quote:"Cotation", th_sentiment:"Tendance du marché",
-      table_title_fontane:"Aperçu par semaine – Fontane", table_title_challenger:"Aperçu par semaine – Challenger",
-      legend_title:"Légende – tendance du marché",
-      legend_items:["Faible — l’offre > la demande","Calme — l’offre ≥ la demande","Stable — équilibre","Soutenu — l’offre ≤ la demande","Ferme — l’offre < la demande"],
-      rules_title:"Réglementation & explications",
-      rules_body:[
-        "Marché libre et contrats dans le secteur belge des frites surgelées.",
-        "La cotation hebdomadaire (précoces et saison de stockage) reflète l’évolution du marché libre.",
-        "Les contrats de culture assurent davantage de stabilité des prix.",
-        "Le graphique montre donc prix contractuels et cotation."
-      ],
-      loading_chart:"Chargement des données…", loading_table:"Chargement du tableau…", loading_error:"Impossible de charger les données : ",
-      no_quote_notice:"Pas de cotation faute de transactions",
-      season_label:"Saison",
-      primeurs_title:"Historique primeurs",
-      primeurs_hint:"15 juillet – 15 septembre; uniquement cotation. Valeur vide = pas de cotation (manque de transactions).",
-      primeurs_th_week:"Sem.", primeurs_th_date:"Date", primeurs_th_quote:"Cotation",
-      dataset_label_fontane:"Cotation Fontane (€/t)", dataset_label_challenger:"Cotation Challenger (€/t)",
-      pdf_download:"Télécharger PDF", print_label:"Imprimer",
-      price_note:"Prix des pommes de terre libres (hors TVA)"
-    },
-    en:{ title:"Belgapom – Quotation", subtitle:"Contract prices and weekly quotation (free potatoes without VAT)",
-      current_period_title:"Current period",
-      kpi_quote:"Quotation", kpi_week:"Week", kpi_date:"Date", kpi_sentiment:"Market sentiment",
-      last_update_label:"Last update", source:"Source: internal reporting",
-      table_title:"Overview per week", th_week:"Week", th_date:"Date (Fri)", th_contract:"Contract", th_quote:"Quotation", th_sentiment:"Market sentiment",
-      table_title_fontane:"Overview per week – Fontane", table_title_challenger:"Overview per week – Challenger",
-      legend_title:"Legend – market sentiment",
-      legend_items:["Weak — supply > demand","Calm — supply ≥ demand","Stable — equilibrium","Supported — supply ≤ demand","Firm — supply < demand"],
-      rules_title:"Regulation & explanation",
-      rules_body:[
-        "Free market and contracts in the Belgian frozen-fries sector.",
-        "The weekly quotation (early potatoes and storage season) reflects free-market moves.",
-        "Production contracts add price stability.",
-        "So the chart shows both contract price and quotation."
-      ],
-      loading_chart:"Loading data…", loading_table:"Loading table…", loading_error:"Could not load data: ",
-      no_quote_notice:"No quotation due to lack of transactions",
-      season_label:"Season",
-      primeurs_title:"Early potatoes – history",
-      primeurs_hint:"15 July – 15 September; quotation only. Empty value = no quotation (lack of transactions).",
-      primeurs_th_week:"Week", primeurs_th_date:"Date", primeurs_th_quote:"Quotation",
-      dataset_label_fontane:"Quotation Fontane (€/t)", dataset_label_challenger:"Quotation Challenger (€/t)",
-      pdf_download:"Download PDF", print_label:"Print",
-      price_note:"Price of free potatoes (excl. VAT)"
-    }
-  };
-  function applyI18N(){
-    const d=T[LANG];
-    document.getElementById('title').textContent=d.title;
-    document.getElementById('subtitle').textContent=d.subtitle;
-    document.querySelectorAll('[data-i18n]').forEach(el=>{
-      const k=el.getAttribute('data-i18n'); if(d[k]) el.textContent=d[k];
-    });
-    // Legend items
-    const ul=document.getElementById('legend_list'); ul.innerHTML='';
-    d.legend_items.forEach(txt=>{ const li=document.createElement('li'); li.innerHTML=txt.replace(/^([^—-]+)/,'<strong>$1</strong>'); ul.appendChild(li); });
-    // Rules body
-    document.getElementById('rules_body').innerHTML=d.rules_body.map(p=>`<p class="mb-2">${p}</p>`).join('');
-    // Loader texts
-    const cl=document.getElementById('chartLoaderText'); if(cl) cl.textContent=d.loading_chart;
-    const ct2=document.getElementById('chart2LoaderText'); if(ct2) ct2.textContent=d.loading_chart;
-    const tl=document.getElementById('tableLoaderText'); if(tl) tl.textContent=d.loading_table;
-    const tl2=document.getElementById('table2LoaderText'); if(tl2) tl2.textContent=d.loading_table;
-    // Table titles
-    const tt1=document.getElementById('tableTitle1'); if(tt1 && d.table_title_fontane) tt1.textContent=d.table_title_fontane;
-    const tt2=document.getElementById('tableTitle2'); if(tt2 && d.table_title_challenger) tt2.textContent=d.table_title_challenger;
-  }
-
-  /* helpers */
-  const euro = v => (v==null||v==='') ? '–' : new Intl.NumberFormat(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE', {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(v));
-  const toNum = v => {
-    if (v==null||v==='') return null;
-    if (typeof v==='number') return isFinite(v)&&v>0 ? v : null;
-    const s=String(v).replace(/[€\s]/g,'').replace(',','.');
-    const n=Number(s); return isFinite(n)&&n>0 ? n : null;
-  };
-  function formatDateISO(iso){ if(!iso) return '–'; const d=new Date(iso+'T00:00:00'); const loc=LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE'; return d.toLocaleDateString(loc,{day:'2-digit',month:'2-digit',year:'numeric'}); }
-  function isoWeekMetaJS(dateObj){ const date=new Date(dateObj); const dayNr=(date.getDay()+6)%7; const thu=new Date(date); thu.setDate(date.getDate()-dayNr+3); const firstThu=new Date(thu.getFullYear(),0,4); const ftDay=(firstThu.getDay()+6)%7; firstThu.setDate(firstThu.getDate()-ftDay+3); const week=1+Math.round((thu-firstThu)/(7*24*3600*1000)); const year=thu.getFullYear(); return {week,year}; }
-  function isoWeekStart(y,w){ const simple=new Date(y,0,1+(w-1)*7); let dow=simple.getDay(); if(dow===0) dow=7; const mon=new Date(simple); mon.setDate(simple.getDate()-dow+1); return new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()); }
-
-  /* state */
-  let chartFontane, chartChallenger, allRows=[], seasonRows=[], seasonStartYear, latestOverallRow, contractKey='contract_price';
-  let primeurRows=[], primeurYears=[], currentPrimeurYear=null;
-
-  const showLoaders=()=>{
-    document.getElementById('chartLoader').classList.remove('loading-hidden');
-    document.getElementById('chart2Loader').classList.remove('loading-hidden');
-    document.getElementById('tableLoader').classList.remove('loading-hidden');
-    document.getElementById('table2Loader').classList.remove('loading-hidden');
-  };
-  const hideLoaders=()=>{
-    document.getElementById('chartLoader').classList.add('loading-hidden');
-    document.getElementById('chart2Loader').classList.add('loading-hidden');
-    document.getElementById('tableLoader').classList.add('loading-hidden');
-    document.getElementById('table2Loader').classList.add('loading-hidden');
-  };
-
-  // Render KPIs for each variety separately
-  // Helper to translate market sentiment across languages
-  function translateSentiment(raw, lang){
-    if(!raw) return '–';
-    const s = String(raw).toLowerCase();
-    // Normalise to base keys based on keywords in multiple languages
-    let key = 'unknown';
-    if(s.includes('vast') || s.includes('ferme') || s.includes('firm')) key = 'vast';
-    else if(s.includes('houd') || s.includes('soutenu') || s.includes('support')) key = 'prijshoudend';
-    else if(s.includes('stabiel') || s.includes('stable')) key = 'stabiel';
-    else if(s.includes('rustig') || s.includes('calme') || s.includes('calm')) key = 'rustig';
-    else if(s.includes('flauw') || s.includes('faible') || s.includes('weak')) key = 'flauw';
-    const map = {
-      'vast':{nl:'Vast',fr:'Ferme',en:'Firm'},
-      'prijshoudend':{nl:'Prijshoudend',fr:'Soutenu',en:'Supported'},
-      'stabiel':{nl:'Stabiel',fr:'Stable',en:'Stable'},
-      'rustig':{nl:'Rustig',fr:'Calme',en:'Calm'},
-      'flauw':{nl:'Flauw',fr:'Faible',en:'Weak'},
-      'unknown':{nl:raw,fr:raw,en:raw}
-    };
-    return (map[key] && map[key][lang]) || raw;
-  }
-
-  function renderKPIVarieties(){
-    const r = latestOverallRow;
-    // Helper to update a specific variety
-    function updateVariety(variety){
-      const quoteEl  = document.getElementById('kpi-quote-' + variety);
-      const weekEl   = document.getElementById('kpi-week-' + variety);
-      const dateEl   = document.getElementById('kpi-date-' + variety);
-      const sentEl   = document.getElementById('kpi-sentiment-' + variety);
-      const noticeEl = document.getElementById('noQuoteNotice' + (variety.charAt(0).toUpperCase() + variety.slice(1)));
-      if(!quoteEl) return;
-      // Determine quotation value for this variety. Do **not** fall back to the general
-      // quotation (`r.notering`). When no specific quotation is available for a variety,
-      // leave the value null so that the UI can show a notice indicating the absence
-      // of a quotation due to lack of transactions. This prevents the price of one
-      // variety from accidentally appearing for the other.
-      let v;
-      if (variety==='fontane') {
-        v = r.notering_fontane;
-      } else if (variety==='challenger') {
-        v = r.notering_challenger;
-      } else {
-        // Fallback only for scenarios where no variety is specified (rare)
-        v = r.notering;
-      }
-      const val = toNum(v);
-      quoteEl.textContent = euro(val);
-      weekEl.textContent  = String(r.week_num).padStart(2,'0');
-      dateEl.textContent  = formatDateISO(r.friday_date);
-      const noQuote = (val==null || val==='');
-      if(noQuote){ noticeEl && noticeEl.classList.remove('hidden'); } else { noticeEl && noticeEl.classList.add('hidden'); }
-      // Sentiment (translate based on current language)
-      sentEl.textContent = translateSentiment(r.marktstemming, LANG);
-      const s = (r.marktstemming||'').toLowerCase();
-      const cls =
-        s.includes('vast')||s.includes('ferme')||s.includes('firm') ? 'chip-green' :
-        s.includes('houd')||s.includes('soutenu')||s.includes('support') ? 'chip-slate' :
-        s.includes('stabiel')||s.includes('stable') ? 'chip-slate' :
-        s.includes('rustig')||s.includes('calme')||s.includes('calm') ? 'chip-slate' :
-        s.includes('flauw')||s.includes('faible')||s.includes('weak')||s.includes('neg') ? 'chip-red' : 'chip-slate';
-      sentEl.className = 'chip mt-1 ' + cls;
-    }
-    updateVariety('fontane');
-    updateVariety('challenger');
-    // Update last update and year
-    document.getElementById('lastUpdate').textContent = new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
-    document.getElementById('year').textContent = new Date().getFullYear();
-  }
-
-  function buildSeries(variety){
-    const rows=[...seasonRows].sort((a,b)=> a.friday_date.localeCompare(b.friday_date));
-    const labels = rows.map(r=> r.week_label);
-    const contract = rows.map(r=> toNum(r[contractKey]));
-    let quote;
-    if(variety==='challenger') quote = rows.map(r=> toNum(r.notering_challenger));
-    else if(variety==='fontane') quote = rows.map(r=> toNum(r.notering_fontane));
-    else quote = rows.map(r=> toNum(r.notering));
-    const vals=[...contract,...quote].filter(Number.isFinite);
-    let yMin=0,yMax=100,yStep=10;
-    if(vals.length){
-      const lo=Math.min(...vals), hi=Math.max(...vals), span=hi-lo, pad=Math.max(10,Math.round(span*0.12));
-      const nice=(sp)=>{ const t=Math.max(1,sp/6), p=10**Math.floor(Math.log10(t)), b=t/p; return (b<=1?1:b<=2?2:b<=5?5:10)*p; };
-      yStep=nice(span||10); yMin=Math.max(0,Math.floor((lo-pad)/yStep)*yStep); yMax=Math.ceil((hi+pad)/yStep)*yStep; if(yMax<=yMin) yMax=yMin+yStep;
-    }
-    return { labels, contract, quote, yMin, yMax, yStep };
-  }
-
-  function renderChartFontane(){
-    const { labels, contract, quote, yMin, yMax, yStep } = buildSeries('fontane');
-    const ctx=document.getElementById('chart').getContext('2d');
-    if(chartFontane) chartFontane.destroy();
-    const contractLabel = LANG==='fr'? 'Prix contractuel (€/t)' : LANG==='en'? 'Contract price (€/t)' : 'Contractprijs (€/t)';
-    const quoteLabel    = T[LANG].dataset_label_fontane || (LANG==='fr'? 'Cotation Fontane (€/t)' : LANG==='en'? 'Quotation Fontane (€/t)' : 'Notering Fontane (€/t)');
-    chartFontane=new Chart(ctx,{
-      type:'line',
-      data:{
-        labels,
-        datasets:[
-          { label: contractLabel,
-            data: contract, borderWidth:3, pointRadius:3.5, tension:0, stepped:true,
-            borderColor:getComputedStyle(document.documentElement).getPropertyValue('--brand-neutral').trim(),
-            backgroundColor:'transparent', spanGaps:false },
-          { label: quoteLabel,
-            data: quote, borderWidth:3, pointRadius:3.5, tension:0.2,
-            borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-quote').trim(),
-            backgroundColor:'transparent', spanGaps:false }
-        ]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        interaction:{mode:'index', intersect:false},
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, boxHeight:12, usePointStyle:true } }, tooltip:{ callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
-        scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:(window.innerWidth<640?6:14) }, grid:{ display:false } }, y:{ min:yMin, max:yMax, ticks:{ stepSize:yStep, callback:v=>`${v} €` }, grid:{ color:'rgba(0,0,0,0.06)' } } }
-      }
-    });
-  }
-
-  function renderChartChallenger(){
-    const { labels, contract, quote, yMin, yMax, yStep } = buildSeries('challenger');
-    const ctx=document.getElementById('chart2').getContext('2d');
-    if(chartChallenger) chartChallenger.destroy();
-    const contractLabel = LANG==='fr'? 'Prix contractuel (€/t)' : LANG==='en'? 'Contract price (€/t)' : 'Contractprijs (€/t)';
-    const quoteLabel    = T[LANG].dataset_label_challenger || (LANG==='fr'? 'Cotation Challenger (€/t)' : LANG==='en'? 'Quotation Challenger (€/t)' : 'Notering Challenger (€/t)');
-    chartChallenger=new Chart(ctx,{
-      type:'line',
-      data:{
-        labels,
-        datasets:[
-          { label: contractLabel,
-            data: contract, borderWidth:3, pointRadius:3.5, tension:0, stepped:true,
-            borderColor:getComputedStyle(document.documentElement).getPropertyValue('--brand-neutral').trim(),
-            backgroundColor:'transparent', spanGaps:false },
-          { label: quoteLabel,
-            data: quote, borderWidth:3, pointRadius:3.5, tension:0.2,
-            borderColor:getComputedStyle(document.documentElement).getPropertyValue('--accent-quote').trim(),
-            backgroundColor:'transparent', spanGaps:false }
-        ]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        interaction:{mode:'index', intersect:false},
-        plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12, boxHeight:12, usePointStyle:true } }, tooltip:{ callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${euro(ctx.parsed.y)}` } } },
-        scales:{ x:{ ticks:{ maxRotation:0, autoSkip:true, maxTicksLimit:(window.innerWidth<640?6:14) }, grid:{ display:false } }, y:{ min:yMin, max:yMax, ticks:{ stepSize:yStep, callback:v=>`${v} €` }, grid:{ color:'rgba(0,0,0,0.06)' } } }
-      }
-    });
-  }
-
-  // Table: generalised for variety
-  function renderTableVariety(variety){
-    const tbodyId = variety==='challenger' ? 'tbody2' : 'tbody';
-    const tableSeasonId = variety==='challenger' ? 'tableSeason2' : 'tableSeason';
-    const tbody = document.getElementById(tbodyId);
-    tbody.innerHTML = '';
-    const rows = [...seasonRows].sort((a,b)=> String(a.friday_date||a.date).localeCompare(String(b.friday_date||b.date)));
-    rows.forEach(r=>{
-      const tr = document.createElement('tr');
-      tr.className = "border-b";
-      tr.style.borderColor = "var(--line)";
-      const quoteVal = variety==='challenger' ? euro(toNum(r.notering_challenger)) : euro(toNum(r.notering_fontane));
-      const sentiment = (r.marktstemming != null && r.marktstemming !== '') ? translateSentiment(r.marktstemming, LANG) : '–';
-      tr.innerHTML = `
-        <td class="py-2 px-2">W${String(r.week_num).padStart(2,'0')}</td>
-        <td class="py-2 px-2">${formatDateISO(r.friday_date || r.date)}</td>
-        <td class="py-2 px-2">${euro(toNum(r[contractKey]))}</td>
-        <td class="py-2 px-2">${quoteVal}</td>
-        <td class="py-2 px-2">${sentiment}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-    document.getElementById(tableSeasonId).textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
-  }
-
-  // PRIMEURS (tabs + tabel) unchanged
-  function renderPrimeursTabs(){
-    const cont=document.getElementById('primeurTabs'); cont.innerHTML='';
-    if(!primeurYears.length){ document.getElementById('primeursSection').style.display='none'; return; }
-    document.getElementById('primeursSection').style.display='';
-    primeurYears.forEach(y=>{
-      const btn=document.createElement('button');
-      btn.className='btn'; btn.textContent=String(y);
-      if(y===currentPrimeurYear) btn.classList.add('btn-active');
-      btn.onclick=()=>{ currentPrimeurYear=y; renderPrimeurs(); renderPrimeursTabs(); };
-      cont.appendChild(btn);
-    });
-  }
-  function renderPrimeurs(){
-    const rows = primeurRows
-      .filter(r=>{
-        const d=new Date((r.date||r.friday_date)+'T00:00:00');
-        return d.getFullYear()===currentPrimeurYear;
-      })
-      .sort((a,b)=> a.friday_date.localeCompare(b.friday_date));
-    const tbody=document.getElementById('primeursTbody'); tbody.innerHTML='';
-    rows.forEach(r=>{
-      const tr=document.createElement('tr'); tr.className="border-b"; tr.style.borderColor="var(--line)";
-      tr.innerHTML=`<td class="py-2 px-2">W${String(r.week_num).padStart(2,'0')}</td>
-        <td class="py-2 px-2">${formatDateISO(r.friday_date||r.date)}</td>
-        <td class="py-2 px-2">${(r.notering==null||r.notering==='') ? '–' : euro(r.notering)}</td>`;
-      tbody.appendChild(tr);
-    });
-  }
-
-  /* PDF export (unchanged) */
-  async function makePDFImproved(){
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit:'pt', format:'a4' });
-    const root = document.getElementById('contentRoot');
-
-    // Header
-    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(17,24,39);
-    doc.text(document.getElementById('title').textContent, 40, 40);
-    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(80);
-    doc.text(document.getElementById('subtitle').textContent, 40, 58);
-
-    // capture each card separately (charts + tables)
-    const chartCard=root.querySelector('section > div');
-    const tableCard1=root.querySelector('aside > div:nth-child(2)');
-    const tableCard2=root.querySelector('aside > div:nth-child(3)');
-    const pad=24; let y=80;
-
-    async function addBlock(el){
-      const canvas=await html2canvas(el,{ scale:2, backgroundColor:null });
-      const img=canvas.toDataURL('imagePNG'); const pageW=doc.internal.pageSize.getWidth();
-      const pageH=doc.internal.pageSize.getHeight(); const margin=40;
-      let w=canvas.width, h=canvas.height; const maxW=pageW-2*margin;
-      if (w>maxW){ const s=maxW/w; w=maxW; h=h*s; }
-      const availH=pageH - margin - y;
-      if (h>availH && h>0){ const s=availH/h; if (s<1){ w=w*s; h=h*s; } }
-      if (y + h > pageH - margin){ doc.addPage(); y=margin; }
-      doc.addImage(img,'PNG',margin,y,w,h,undefined,'FAST'); y+=h+pad;
-    }
-
-    await addBlock(chartCard);
-    await addBlock(tableCard1);
-    await addBlock(tableCard2);
-    const fname=`belgapom-notering_${new Date().toISOString().slice(0,10)}.pdf`;
-    doc.save(fname);
-  }
-
-  async function fetchJSON(u){ const r=await fetch(u,{cache:'no-store'}); const t=await r.text(); if(!t) throw new Error('Lege respons'); if(t.trim().startsWith('<')) throw new Error('HTML i.p.v. JSON'); return JSON.parse(t); }
-
-  (async function init(){
-    applyI18N();
-
-    const setLang = (l)=>{ LANG=l; applyI18N(); renderKPIVarieties(); renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger'); if(primeurYears.length){ renderPrimeursTabs(); renderPrimeurs(); } };
-    document.getElementById('btn-nl').onclick=()=>setLang('nl');
-    document.getElementById('btn-fr').onclick=()=>setLang('fr');
-    document.getElementById('btn-en').onclick=()=>setLang('en');
-
-    // Print/PDF
-    document.getElementById('btn-print').onclick=()=>window.print();
-    document.getElementById('m-print').onclick=()=>window.print();
-    document.getElementById('btn-pdf').onclick=makePDFImproved;
-    document.getElementById('m-pdf').onclick=makePDFImproved;
-
-    try{
-      const data=await fetchJSON(APP_SCRIPT_JSON_URL);
-      const rows = Array.isArray(data.rows) ? data.rows : [];
-      if(!rows.length) throw new Error('Geen rijen in feed');
-      allRows = rows;
-
-      contractKey = ['contract_price','contractprijs','contract'].find(k=>k in allRows[0]) || 'contract_price';
-
-      // Scheiding primeurs
-      const nonPrimeRows = allRows.filter(r => !r.is_primeur);
-      primeurRows = allRows.filter(r => r.is_primeur===true);
-
-      // KPI (laatste vrijdag) gebaseerd op niet-primeurs; fallback = alle rijen
-      const baseForLatest = nonPrimeRows.length ? nonPrimeRows : allRows;
-      const cutoffIso = (data.meta && data.meta.latest_cutoff_friday_iso) ? data.meta.latest_cutoff_friday_iso : (()=>{ 
-        const nowBE=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'}));
-        const dow=nowBE.getDay(); const dsf=(dow>=5)?(dow-5):(dow+2); const lf=new Date(nowBE); lf.setDate(nowBE.getDate()-dsf);
-        return lf.toISOString().slice(0,10);
-      })();
-      const cutoffDateObj = new Date(cutoffIso+'T00:00:00'); const target = isoWeekMetaJS(cutoffDateObj);
-      latestOverallRow = [...baseForLatest].reverse().find(r=>{
-        const hasQuote = (r.notering_fontane != null) || (r.notering_challenger != null) || (r.notering != null) || (r[contractKey] != null);
-        if(!hasQuote) return false;
-        const meta=isoWeekMetaJS(new Date((r.friday_date||r.date)+'T00:00:00'));
-        return meta.week===target.week && meta.year===target.year;
-      }) || baseForLatest[baseForLatest.length-1];
-
-      // Seizoenen alleen uit niet-primeurs; toegestaan: 2024 (24-25) en 2025 (25-26)
-      const seasonsRaw = Array.from(new Set(nonPrimeRows.map(r => (r.week_num>=36? r.week_year : r.week_year-1)))).sort((a,b)=>b-a);
-      const allowed = [2024, 2025].filter(y => seasonsRaw.includes(y));
-      const sel = document.getElementById('seasonSelect'); sel.innerHTML='';
-      allowed.forEach(y=>{ const opt=document.createElement('option'); opt.value=y; opt.textContent=`W36 ${y} – W36 ${y+1}`; sel.appendChild(opt); });
-      const suggested = data.meta && data.meta.suggested_season_start_year;
-      seasonStartYear = allowed.includes(suggested) ? suggested : (allowed[0] || seasonsRaw[0]);
-      sel.value = seasonStartYear;
-
-      function updateSeason(){
-        const y = parseInt(sel.value,10);
-        seasonStartYear = y;
-        const startDate = isoWeekStart(y,36), endMon = isoWeekStart(y+1,36);
-        const endDate = new Date(endMon); endDate.setDate(endMon.getDate() + 6);
-        seasonRows = nonPrimeRows.filter(r=>{
-          const d=new Date((r.friday_date||r.date)+'T00:00:00');
-          return d>=startDate && d<=endDate;
-        });
-        // Update season labels for both varieties
-        const seasonText = `W36 ${y} – W36 ${y+1}`;
-        const lblFont = document.getElementById('seasonLabelVarietyFontane');
-        const lblChal  = document.getElementById('seasonLabelVarietyChallenger');
-        if (lblFont) lblFont.textContent = seasonText;
-        if (lblChal)  lblChal.textContent  = seasonText;
-        renderChartFontane(); renderChartChallenger(); renderTableVariety('fontane'); renderTableVariety('challenger');
-      }
-      sel.onchange = updateSeason;
-      updateSeason();
-      renderKPIVarieties();
-
-      // PRIMEURS tabs + tabel
-      if (primeurRows.length){
-        primeurYears = Array.from(new Set(
-          primeurRows.map(r => new Date((r.friday_date||r.date)+'T00:00:00').getFullYear())
-        )).sort((a,b)=>b-a);
-        currentPrimeurYear = primeurYears[0];
-        renderPrimeursTabs(); renderPrimeurs();
-        document.getElementById('primeursSection').style.display='';
-      } else {
-        document.getElementById('primeursSection').style.display='none';
-      }
-
-      // klaar
-      document.getElementById('lastUpdate').textContent = new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
-      document.getElementById('year').textContent = new Date().getFullYear();
-      hideLoaders();
-    }catch(err){
-      const d=T[LANG]||T.nl;
-      document.getElementById('chartLoaderText').textContent = (d.loading_error||'Kon data niet laden: ')+err.message;
-      document.getElementById('chart2LoaderText').textContent = (d.loading_error||'Kon data niet laden: ')+err.message;
-      document.getElementById('tableLoaderText').textContent  = (d.loading_error||'Kon data niet laden: ')+err.message;
-      document.getElementById('table2LoaderText').textContent  = (d.loading_error||'Kon data niet laden: ')+err.message;
-      document.getElementById('chartLoader').classList.remove('loading-hidden');
-      document.getElementById('chart2Loader').classList.remove('loading-hidden');
-      document.getElementById('tableLoader').classList.remove('loading-hidden');
-      document.getElementById('table2Loader').classList.remove('loading-hidden');
-    }
-  })();
-  </script>
-    <!-- Cookiebanner -->
-  <div id="cookie-banner"
-       class="fixed bottom-3 inset-x-0 px-3 z-50"
-       style="display:none;">
-    <div class="max-w-6xl mx-auto">
-      <div class="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 p-3 md:p-4 rounded-2xl shadow-lg bg-white border border-gray-200">
-        <div class="text-xs md:text-sm text-gray-700">
-          <strong>Cookies</strong><br/>
-          Deze website gebruikt analytische cookies (Google Analytics) om bezoekstatistieken bij te houden.
-          Je data wordt anoniem verwerkt. Je kan dit accepteren of weigeren.
-        </div>
-        <div class="flex gap-2 mt-1 md:mt-0 md:ml-auto">
-          <button id="cookie-accept"
-                  class="px-3 py-1.5 rounded-xl text-xs md:text-sm font-semibold bg-yellow-400 text-black hover:bg-yellow-300 transition">
-            Accepteren
-          </button>
-          <button id="cookie-decline"
-                  class="px-3 py-1.5 rounded-xl text-xs md:text-sm border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
-            Weigeren
-          </button>
-        </div>
+<!-- TABLES -->
+<div class="tables-section anim-in anim-d3">
+  <div class="tables-grid">
+    <div class="table-card">
+      <div class="table-card-header"><div class="table-card-title" id="tableTitle1" data-i18n="table_title_fontane">Overzicht per week – Fontane</div><span class="table-season-tag" id="tableSeason"></span></div>
+      <div class="table-scroll">
+        <div id="tableLoader" class="loading-overlay"><div style="display:flex;align-items:center"><div class="spinner"></div><span class="loader-text" id="tableLoaderText">Tabel laden…</span></div></div>
+        <table class="dtable"><thead><tr><th data-i18n="th_week">Week</th><th data-i18n="th_date">Datum (vr)</th><th data-i18n="th_contract">Contract</th><th data-i18n="th_quote">Notering</th><th data-i18n="th_sentiment">Stemming</th></tr></thead><tbody id="tbody"></tbody></table>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-card-header"><div class="table-card-title" id="tableTitle2" data-i18n="table_title_challenger">Overzicht per week – Challenger</div><span class="table-season-tag" id="tableSeason2"></span></div>
+      <div class="table-scroll">
+        <div id="table2Loader" class="loading-overlay"><div style="display:flex;align-items:center"><div class="spinner"></div><span class="loader-text" id="table2LoaderText">Tabel laden…</span></div></div>
+        <table class="dtable"><thead><tr><th data-i18n="th_week">Week</th><th data-i18n="th_date">Datum (vr)</th><th data-i18n="th_contract">Contract</th><th data-i18n="th_quote">Notering</th><th data-i18n="th_sentiment">Stemming</th></tr></thead><tbody id="tbody2"></tbody></table>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    (function(){
-      const CONSENT_KEY = 'belgapomnotering_cookie_consent';
-      const banner = document.getElementById('cookie-banner');
+<!-- FOOTER -->
+<div class="info-footer anim-in anim-d4">
+  <div class="info-footer-grid">
+    <div class="info-block"><h3 data-i18n="legend_title">Legende marktstemming</h3><ul class="legend-list" id="legend_list"></ul></div>
+    <div class="info-block"><h3 data-i18n="rules_title">Reglementering &amp; toelichting</h3><div id="rules_body"></div><p style="margin-top:.75rem;font-size:.75rem;color:var(--muted)">© <span id="year"></span> Belgapom · <span data-i18n="price_note"></span></p></div>
+  </div>
+</div>
 
-      function hideBanner() {
-        if (banner) banner.style.display = 'none';
+<!-- PRIMEURS -->
+<section class="primeurs-section" id="primeursSection" style="display:none">
+  <div class="primeurs-card">
+    <div class="primeurs-header"><h3 data-i18n="primeurs_title">Historiek primeurs</h3><p data-i18n="primeurs_hint">Periode 15 juli – 15 september;.</p></div>
+    <div class="primeur-tabs-wrap" id="primeurTabs"></div>
+    <div class="primeur-table-wrap">
+      <div class="table-scroll" style="max-height:400px">
+        <div id="primeursTableLoader" class="loading-overlay loading-hidden"><div style="display:flex;align-items:center"><div class="spinner"></div><span class="loader-text" id="primeursTableLoaderText">Tabel laden…</span></div></div>
+        <table class="dtable"><thead><tr><th data-i18n="primeurs_th_week">Week</th><th data-i18n="primeurs_th_date">Datum</th><th data-i18n="primeurs_th_quote">Notering</th></tr></thead><tbody id="primeursTbody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BACK TO TOP -->
+<button id="backToTop" class="back-to-top no-print" aria-label="Terug naar boven" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 15V5M10 5L5 10M10 5L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
+<!-- MOBILE BAR -->
+<div class="mobile-bar no-print">
+  <button id="m-pdf" class="hbtn hbtn-cta" data-i18n="pdf_download">Download PDF</button>
+</div>
+
+<script>
+const APP_SCRIPT_JSON_URL="https://script.google.com/macros/s/AKfycbxqeFaRuqbPmbP2Q9nxAeafMlmLeX4q5YgNShYjHn2hLo8zZqB6qxAKbTB-kbI-ucMAsQ/exec?mode=json";
+
+let LANG=(new URLSearchParams(location.search).get('lang'))||'nl';
+const T={
+  nl:{title:"Belgapom – Notering",subtitle:"Contractprijzen en wekelijkse notering (vrije aardappelen excl. BTW)",heroTitle:'Wekelijkse <span>Notering</span>',explainer:"Elke vrijdagochtend noteert Belgapom, op basis van cijfers van handelaars en verwerkers, de meest gehanteerde prijs voor vrije aardappelen (excl. BTW) op de Belgische markt. De notering bevat ook een marktstemming. Naast de notering toont de grafiek de evolutie van de gemiddelde contractprijzen.",kpi_quote:"Notering",kpi_week:"Week",kpi_date:"Datum",kpi_sentiment:"Marktstemming",last_update_label:"Laatste update",source:"Bron: interne rapportering",th_week:"Week",th_date:"Datum (vr)",th_contract:"Contract",th_quote:"Notering",th_sentiment:"Stemming",table_title_fontane:"Overzicht per week – Fontane",table_title_challenger:"Overzicht per week – Challenger",legend_title:"Legende marktstemming",legend_items:["Flauw — aanbod is groter dan de vraag","Rustig — aanbod is groter dan of gelijk aan de vraag","Stabiel — aanbod is gelijk aan de vraag (evenwicht)","Prijshoudend — aanbod is kleiner dan of gelijk aan de vraag","Vast — aanbod is kleiner dan de vraag"],rules_title:"Reglementering & toelichting",rules_body:["Vrije markt en contracten in de Belgische diepvriesfrietsector:","De wekelijkse Belgapomnotering voor vroege aardappelen (juli–augustus) en voor Fontane & Challenger (bewaarseizoen) geeft een duidelijke indicatie van de evolutie op de vrije aardappelmarkt.","Daarnaast maken telers, handel en verwerking gebruik van teeltcontracten voor prijsstabiliteit.","Daarom toont de grafiek naast de notering ook de evolutie van contractprijzen."],loading_chart:"Data laden…",loading_table:"Tabel laden…",loading_error:"Kon data niet laden: ",no_quote_notice:"Geen notering wegens gebrek aan transacties",season_label:"Seizoen",primeurs_title:"Historiek primeurs",primeurs_hint:"Periode 15 juli – 15 september; enkel notering (geen contractprijzen). Lege notering = geen notering wegens gebrek aan transacties.",primeurs_th_week:"Week",primeurs_th_date:"Datum",primeurs_th_quote:"Notering",dataset_label_fontane:"Notering Fontane (€/t)",dataset_label_challenger:"Notering Challenger (€/t)",contract_label:"Contractprijs (€/t)",pdf_download:"Download PDF",print_label:"Print",price_note:"Prijzen van vrije aardappelen excl. btw"},
+  fr:{title:"Belgapom – Cotation",subtitle:"Prix contractuels et cotation hebdomadaire (pommes de terre libre hors TVA)",heroTitle:'Cotation <span>hebdomadaire</span>',explainer:"Chaque vendredi matin, Belgapom publie, sur base des chiffres des négociants et transformateurs, le prix le plus pratiqué pour les pommes de terre libres (hors TVA) sur le marché belge. La cotation comprend également une tendance du marché. Le graphique montre aussi l\u2019évolution des prix contractuels moyens.",kpi_quote:"Cotation",kpi_week:"Semaine",kpi_date:"Date",kpi_sentiment:"Tendance du marché",last_update_label:"Dernière mise à jour",source:"Source : reporting interne",th_week:"Sem.",th_date:"Date (ven)",th_contract:"Contrat",th_quote:"Cotation",th_sentiment:"Tendance",table_title_fontane:"Aperçu par semaine – Fontane",table_title_challenger:"Aperçu par semaine – Challenger",legend_title:"Légende – tendance du marché",legend_items:["Faible — l'offre > la demande","Calme — l'offre ≥ la demande","Stable — équilibre","Soutenu — l'offre ≤ la demande","Ferme — l'offre < la demande"],rules_title:"Réglementation & explications",rules_body:["Marché libre et contrats dans le secteur belge des frites surgelées.","La cotation hebdomadaire (précoces et saison de stockage) reflète l'évolution du marché libre.","Les contrats de culture assurent davantage de stabilité des prix.","Le graphique montre donc prix contractuels et cotation."],loading_chart:"Chargement des données…",loading_table:"Chargement du tableau…",loading_error:"Impossible de charger les données : ",no_quote_notice:"Pas de cotation faute de transactions",season_label:"Saison",primeurs_title:"Historique primeurs",primeurs_hint:"15 juillet – 15 septembre; uniquement cotation.",primeurs_th_week:"Sem.",primeurs_th_date:"Date",primeurs_th_quote:"Cotation",dataset_label_fontane:"Cotation Fontane (€/t)",dataset_label_challenger:"Cotation Challenger (€/t)",contract_label:"Prix contractuel (€/t)",pdf_download:"Télécharger PDF",print_label:"Imprimer",price_note:"Prix des pommes de terre libres (hors TVA)"},
+  en:{title:"Belgapom – Quotation",subtitle:"Contract prices and weekly quotation (free potatoes without VAT)",heroTitle:'Weekly <span>Quotation</span>',explainer:"Every Friday morning, Belgapom publishes the most commonly traded price for free potatoes (excl. VAT) on the Belgian market, based on figures from traders and processors. The quotation also includes a market sentiment indicator. The chart additionally shows the evolution of average contract prices.",kpi_quote:"Quotation",kpi_week:"Week",kpi_date:"Date",kpi_sentiment:"Market sentiment",last_update_label:"Last update",source:"Source: internal reporting",th_week:"Week",th_date:"Date (Fri)",th_contract:"Contract",th_quote:"Quotation",th_sentiment:"Sentiment",table_title_fontane:"Overview per week – Fontane",table_title_challenger:"Overview per week – Challenger",legend_title:"Legend – market sentiment",legend_items:["Weak — supply > demand","Calm — supply ≥ demand","Stable — equilibrium","Supported — supply ≤ demand","Firm — supply < demand"],rules_title:"Regulation & explanation",rules_body:["Free market and contracts in the Belgian frozen-fries sector.","The weekly quotation (early potatoes and storage season) reflects free-market moves.","Production contracts add price stability.","So the chart shows both contract price and quotation."],loading_chart:"Loading data…",loading_table:"Loading table…",loading_error:"Could not load data: ",no_quote_notice:"No quotation due to lack of transactions",season_label:"Season",primeurs_title:"Early potatoes – history",primeurs_hint:"15 July – 15 September; quotation only.",primeurs_th_week:"Week",primeurs_th_date:"Date",primeurs_th_quote:"Quotation",dataset_label_fontane:"Quotation Fontane (€/t)",dataset_label_challenger:"Quotation Challenger (€/t)",contract_label:"Contract price (€/t)",pdf_download:"Download PDF",print_label:"Print",price_note:"Price of free potatoes (excl. VAT)"}
+};
+
+function applyI18N(){
+  const d=T[LANG];
+  document.getElementById('title').textContent=d.title;
+  document.getElementById('subtitle').textContent=d.subtitle;
+  document.getElementById('heroTitle').innerHTML=d.heroTitle;
+  document.getElementById('explainerText').textContent=d.explainer;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(d[k])el.textContent=d[k];});
+  ['nl','fr','en'].forEach(l=>{const b=document.getElementById('btn-'+l);if(b){l===LANG?b.classList.add('hbtn-active'):b.classList.remove('hbtn-active');}});
+  const ul=document.getElementById('legend_list');ul.innerHTML='';
+  d.legend_items.forEach(txt=>{const li=document.createElement('li');li.innerHTML=txt.replace(/^([^—-]+)/,'<strong>$1</strong>');ul.appendChild(li);});
+  document.getElementById('rules_body').innerHTML=d.rules_body.map(p=>`<p style="margin-bottom:.35rem">${p}</p>`).join('');
+  [['chartLoaderText','loading_chart'],['chart2LoaderText','loading_chart'],['tableLoaderText','loading_table'],['table2LoaderText','loading_table']].forEach(([id,key])=>{const el=document.getElementById(id);if(el&&d[key])el.textContent=d[key];});
+  const tt1=document.getElementById('tableTitle1');if(tt1&&d.table_title_fontane)tt1.textContent=d.table_title_fontane;
+  const tt2=document.getElementById('tableTitle2');if(tt2&&d.table_title_challenger)tt2.textContent=d.table_title_challenger;
+}
+
+const euro=v=>(v==null||v==='')?'–':new Intl.NumberFormat(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(v));
+const toNum=v=>{if(v==null||v==='')return null;if(typeof v==='number')return isFinite(v)&&v>0?v:null;const s=String(v).replace(/[€\s]/g,'').replace(',','.');const n=Number(s);return isFinite(n)&&n>0?n:null;};
+function formatDateISO(iso){if(!iso)return'–';const d=new Date(iso+'T00:00:00');return d.toLocaleDateString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function isoWeekMetaJS(dateObj){const date=new Date(dateObj);const dayNr=(date.getDay()+6)%7;const thu=new Date(date);thu.setDate(date.getDate()-dayNr+3);const firstThu=new Date(thu.getFullYear(),0,4);const ftDay=(firstThu.getDay()+6)%7;firstThu.setDate(firstThu.getDate()-ftDay+3);return{week:1+Math.round((thu-firstThu)/(7*24*3600*1000)),year:thu.getFullYear()};}
+function isoWeekStart(y,w){const simple=new Date(y,0,1+(w-1)*7);let dow=simple.getDay();if(dow===0)dow=7;const mon=new Date(simple);mon.setDate(simple.getDate()-dow+1);return new Date(mon.getFullYear(),mon.getMonth(),mon.getDate());}
+function translateSentiment(raw,lang){if(!raw)return'–';const s=String(raw).toLowerCase();let key='unknown';if(s.includes('vast')||s.includes('ferme')||s.includes('firm'))key='vast';else if(s.includes('houd')||s.includes('soutenu')||s.includes('support'))key='prijshoudend';else if(s.includes('stabiel')||s.includes('stable'))key='stabiel';else if(s.includes('rustig')||s.includes('calme')||s.includes('calm'))key='rustig';else if(s.includes('flauw')||s.includes('faible')||s.includes('weak'))key='flauw';const map={'vast':{nl:'Vast',fr:'Ferme',en:'Firm'},'prijshoudend':{nl:'Prijshoudend',fr:'Soutenu',en:'Supported'},'stabiel':{nl:'Stabiel',fr:'Stable',en:'Stable'},'rustig':{nl:'Rustig',fr:'Calme',en:'Calm'},'flauw':{nl:'Flauw',fr:'Faible',en:'Weak'},'unknown':{nl:raw,fr:raw,en:raw}};return(map[key]&&map[key][lang])||raw;}
+
+let chartFontane,chartChallenger,allRows=[],seasonRows=[],seasonStartYear,latestOverallRow,contractKey='contract_price';
+let primeurRows=[],primeurYears=[],currentPrimeurYear=null;
+const showLoaders=()=>{['chartLoader','chart2Loader','tableLoader','table2Loader'].forEach(id=>document.getElementById(id).classList.remove('loading-hidden'));};
+const hideLoaders=()=>{['chartLoader','chart2Loader','tableLoader','table2Loader'].forEach(id=>document.getElementById(id).classList.add('loading-hidden'));};
+
+function renderKPIVarieties(){
+  const r=latestOverallRow;
+  function upd(variety){
+    const qEl=document.getElementById('kpi-quote-'+variety),wEl=document.getElementById('kpi-week-'+variety),dEl=document.getElementById('kpi-date-'+variety),sEl=document.getElementById('kpi-sentiment-'+variety),nEl=document.getElementById('noQuoteNotice'+(variety.charAt(0).toUpperCase()+variety.slice(1)));
+    if(!qEl)return;
+    let v;if(variety==='fontane')v=r.notering_fontane;else if(variety==='challenger')v=r.notering_challenger;else v=r.notering;
+    const val=toNum(v);qEl.textContent=euro(val);wEl.textContent=String(r.week_num).padStart(2,'0');dEl.textContent=formatDateISO(r.friday_date);
+    if(val==null){nEl&&nEl.classList.remove('hidden');}else{nEl&&nEl.classList.add('hidden');}
+    sEl.textContent=translateSentiment(r.marktstemming,LANG);
+    const s=(r.marktstemming||'').toLowerCase();
+    sEl.className='kpi-sentiment '+(s.includes('vast')||s.includes('ferme')||s.includes('firm')?'chip-green':s.includes('flauw')||s.includes('faible')||s.includes('weak')?'chip-red':'chip-slate');
+  }
+  upd('fontane');upd('challenger');
+  document.getElementById('lastUpdate').textContent=new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
+  document.getElementById('year').textContent=new Date().getFullYear();
+}
+
+function buildSeries(variety){
+  const rows=[...seasonRows].sort((a,b)=>a.friday_date.localeCompare(b.friday_date));
+  const labels=rows.map(r=>r.week_label),contract=rows.map(r=>toNum(r[contractKey]));
+  let quote;if(variety==='challenger')quote=rows.map(r=>toNum(r.notering_challenger));else if(variety==='fontane')quote=rows.map(r=>toNum(r.notering_fontane));else quote=rows.map(r=>toNum(r.notering));
+  const vals=[...contract,...quote].filter(Number.isFinite);
+  let yMin=0,yMax=100,yStep=10;
+  if(vals.length){const lo=Math.min(...vals),hi=Math.max(...vals),span=hi-lo,pad=Math.max(10,Math.round(span*.15));const nice=sp=>{const t=Math.max(1,sp/6),p=10**Math.floor(Math.log10(t)),b=t/p;return(b<=1?1:b<=2?2:b<=5?5:10)*p;};yStep=nice(span||10);yMin=Math.max(0,Math.floor((lo-pad)/yStep)*yStep);yMax=Math.ceil((hi+pad)/yStep)*yStep;if(yMax<=yMin)yMax=yMin+yStep;}
+  return{labels,contract,quote,yMin,yMax,yStep};
+}
+
+function mkChart(canvasId,variety){
+  const{labels,contract,quote,yMin,yMax,yStep}=buildSeries(variety);
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  const cL=T[LANG].contract_label,qL=T[LANG]['dataset_label_'+variety];
+  const grad=ctx.createLinearGradient(0,0,0,ctx.canvas.clientHeight||500);
+  grad.addColorStop(0,'rgba(255,202,0,.20)');grad.addColorStop(1,'rgba(255,202,0,.01)');
+  return new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {
+        label:cL,data:contract,
+        borderWidth:4,
+        pointRadius:0,pointHoverRadius:5,
+        tension:.35,
+        borderColor:'#3f3f3f',
+        backgroundColor:'transparent',
+        spanGaps:false,
+        pointBackgroundColor:'#3f3f3f',pointBorderColor:'#fff',pointBorderWidth:2,
+        order:2
+      },
+      {
+        label:qL,data:quote,
+        borderWidth:5,
+        pointRadius:0,pointHoverRadius:6,
+        tension:.3,
+        borderColor:'#FFCA00',
+        backgroundColor:grad,fill:true,
+        spanGaps:false,
+        pointBackgroundColor:'#FFCA00',pointBorderColor:'#fff',pointBorderWidth:2,
+        order:1
       }
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',align:'end',labels:{
+          boxWidth:18,boxHeight:4,usePointStyle:false,
+          font:{family:'Paralucent',size:13,weight:'600'},color:'#555555',padding:24
+        }},
+        tooltip:{
+          backgroundColor:'#1a1a1a',
+          titleFont:{family:'Paralucent',size:13,weight:'600'},titleColor:'rgba(255,255,255,.7)',
+          bodyFont:{family:'IBM Plex Mono',size:13,weight:'500'},bodyColor:'#fff',
+          padding:{x:14,y:10},cornerRadius:10,
+          displayColors:true,boxWidth:12,boxHeight:12,boxPadding:6,
+          borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          callbacks:{label:c=>' '+c.dataset.label+':  '+euro(c.parsed.y)}
+        }
+      },
+      scales:{
+        x:{ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:window.innerWidth<640?7:16,font:{family:'IBM Plex Mono',size:12,weight:'500'},color:'#666666',padding:8},grid:{display:false},border:{display:false}},
+        y:{min:yMin,max:yMax,ticks:{stepSize:yStep,callback:v=>v+' €',font:{family:'IBM Plex Mono',size:12,weight:'500'},color:'#666666',padding:12},grid:{color:'rgba(0,0,0,.08)',lineWidth:1},border:{display:false}}
+      },
+      layout:{padding:{top:8,right:8,bottom:4,left:4}}
+    }
+  });
+}
 
-      function showBanner() {
-        if (banner) banner.style.display = 'block';
-      }
+function renderChartFontane(){if(chartFontane)chartFontane.destroy();chartFontane=mkChart('chart','fontane');}
+function renderChartChallenger(){if(chartChallenger)chartChallenger.destroy();chartChallenger=mkChart('chart2','challenger');}
 
-      const stored = localStorage.getItem(CONSENT_KEY);
+function renderTableVariety(variety){
+  const tbodyId=variety==='challenger'?'tbody2':'tbody',tsId=variety==='challenger'?'tableSeason2':'tableSeason';
+  const tbody=document.getElementById(tbodyId);tbody.innerHTML='';
+  [...seasonRows].sort((a,b)=>String(a.friday_date||a.date).localeCompare(String(b.friday_date||b.date))).forEach(r=>{
+    const tr=document.createElement('tr');
+    const qv=variety==='challenger'?euro(toNum(r.notering_challenger)):euro(toNum(r.notering_fontane));
+    const sent=(r.marktstemming!=null&&r.marktstemming!=='')?translateSentiment(r.marktstemming,LANG):'–';
+    tr.innerHTML=`<td>W${String(r.week_num).padStart(2,'0')}</td><td>${formatDateISO(r.friday_date||r.date)}</td><td>${euro(toNum(r[contractKey]))}</td><td class="td-quote">${qv}</td><td>${sent}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById(tsId).textContent=`W36 ${seasonStartYear} – W36 ${seasonStartYear+1}`;
+}
 
-      if (stored === 'accepted') {
-        // consent vroeger al gegeven → GA meteen laden
-        loadGAOnce();
-        hideBanner();
-      } else if (stored === 'declined') {
-        // expliciet geweigerd → niets doen
-        hideBanner();
-      } else {
-        // nog geen keuze → banner tonen
-        showBanner();
-      }
+function renderPrimeursTabs(){
+  const c=document.getElementById('primeurTabs');c.innerHTML='';
+  if(!primeurYears.length){document.getElementById('primeursSection').style.display='none';return;}
+  document.getElementById('primeursSection').style.display='';
+  primeurYears.forEach(y=>{const b=document.createElement('button');b.className='hbtn';b.textContent=String(y);b.style.cssText='border-color:var(--line);color:var(--body);background:var(--card)';if(y===currentPrimeurYear){b.classList.add('hbtn-active');b.style.cssText='';}b.onclick=()=>{currentPrimeurYear=y;renderPrimeurs();renderPrimeursTabs();};c.appendChild(b);});
+}
+function renderPrimeurs(){
+  const rows=primeurRows.filter(r=>new Date((r.date||r.friday_date)+'T00:00:00').getFullYear()===currentPrimeurYear).sort((a,b)=>a.friday_date.localeCompare(b.friday_date));
+  const tb=document.getElementById('primeursTbody');tb.innerHTML='';
+  rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td>W${String(r.week_num).padStart(2,'0')}</td><td>${formatDateISO(r.friday_date||r.date)}</td><td class="td-quote">${(r.notering==null||r.notering==='')?'–':euro(r.notering)}</td>`;tb.appendChild(tr);});
+}
 
-      const btnAccept = document.getElementById('cookie-accept');
-      const btnDecline = document.getElementById('cookie-decline');
+async function makePDFImproved(){
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const pw=doc.internal.pageSize.getWidth();
+  const ph=doc.internal.pageSize.getHeight();
+  const m=36;
+  const maxW=pw-2*m;
+  let y=m;
 
-      if (btnAccept) {
-        btnAccept.addEventListener('click', function(){
-          localStorage.setItem(CONSENT_KEY, 'accepted');
-          loadGAOnce();
-          hideBanner();
+  // Title
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(26,26,26);
+  doc.text(document.getElementById('title').textContent,m,y+14);
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(120);
+  doc.text(document.getElementById('subtitle').textContent,m,y+28);
+  y+=44;
+
+  // Temporarily disable animations and round corners for cleaner capture
+  const root=document.documentElement;
+  root.style.setProperty('--radius','4px');
+  root.style.setProperty('--radius-sm','4px');
+  document.querySelectorAll('.anim-in').forEach(el=>{el.style.animation='none';el.style.opacity='1';});
+
+  async function capture(el){
+    if(!el||el.offsetHeight===0) return null;
+    return await html2canvas(el,{
+      scale:2,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      logging:false,
+      windowWidth:1200,
+      onclone:function(clonedDoc){
+        // Force backgrounds to render
+        clonedDoc.querySelectorAll('.kpi-card,.kpi-week-badge,.kpi-sentiment,.table-card-header,.dtable th,.chip-green,.chip-slate,.chip-red').forEach(el=>{
+          el.style.webkitPrintColorAdjust='exact';
+          el.style.printColorAdjust='exact';
         });
-      }
-
-      if (btnDecline) {
-        btnDecline.addEventListener('click', function(){
-          localStorage.setItem(CONSENT_KEY, 'declined');
-          hideBanner();
+        // Remove overflow hidden on table scrolls for full capture
+        clonedDoc.querySelectorAll('.table-scroll').forEach(el=>{
+          el.style.maxHeight='none';
+          el.style.overflow='visible';
         });
+        // Remove no-print elements
+        clonedDoc.querySelectorAll('.no-print,.mobile-bar').forEach(el=>el.remove());
       }
-    })();
-  </script>
+    });
+  }
+
+  async function addBlock(el,pad){
+    const canvas=await capture(el);
+    if(!canvas) return;
+    const img=canvas.toDataURL('image/png');
+    let w=canvas.width,h=canvas.height;
+    // Scale to fit page width
+    const s=maxW/w; w=maxW; h=h*s;
+    // If block is taller than page, scale down to fit
+    const maxH=ph-2*m;
+    if(h>maxH){const s2=maxH/h; w*=s2; h=maxH;}
+    // Page break if needed
+    if(y+h>ph-m){doc.addPage();y=m;}
+    doc.addImage(img,'PNG',m,y,w,h,undefined,'FAST');
+    y+=h+(pad||16);
+  }
+
+  // Capture each section
+  await addBlock(document.getElementById('heroSection'),20);
+  await addBlock(document.getElementById('fontaneCard'),20);
+  await addBlock(document.getElementById('challengerCard'),20);
+
+  // Tables side by side - capture whole tables-section
+  const tablesEl=document.querySelector('.tables-section');
+  if(tablesEl) await addBlock(tablesEl,20);
+
+  // Footer
+  const footerEl=document.querySelector('.info-footer');
+  if(footerEl) await addBlock(footerEl,16);
+
+  // Primeurs if visible
+  const primeursEl=document.getElementById('primeursSection');
+  if(primeursEl&&primeursEl.style.display!=='none') await addBlock(primeursEl,16);
+
+  // Restore styles
+  root.style.removeProperty('--radius');
+  root.style.removeProperty('--radius-sm');
+  document.querySelectorAll('.anim-in').forEach(el=>{el.style.animation='';el.style.opacity='';});
+
+  doc.save(`belgapom-notering_${new Date().toISOString().slice(0,10)}.pdf`);
+}
+
+async function fetchJSON(u){const r=await fetch(u,{cache:'no-store'});const t=await r.text();if(!t)throw new Error('Lege respons');if(t.trim().startsWith('<'))throw new Error('HTML i.p.v. JSON');return JSON.parse(t);}
+
+(async function init(){
+  applyI18N();
+
+  // Back to top visibility
+  const btt=document.getElementById('backToTop');
+  window.addEventListener('scroll',()=>{
+    btt.classList.toggle('visible',window.scrollY>400);
+  },{passive:true});
+
+  const setLang=l=>{LANG=l;applyI18N();renderKPIVarieties();renderChartFontane();renderChartChallenger();renderTableVariety('fontane');renderTableVariety('challenger');if(primeurYears.length){renderPrimeursTabs();renderPrimeurs();}};
+  document.getElementById('btn-nl').onclick=()=>setLang('nl');
+  document.getElementById('btn-fr').onclick=()=>setLang('fr');
+  document.getElementById('btn-en').onclick=()=>setLang('en');
+  document.getElementById('btn-pdf').onclick=makePDFImproved;
+  document.getElementById('m-pdf').onclick=makePDFImproved;
+
+  try{
+    const data=await fetchJSON(APP_SCRIPT_JSON_URL);
+    const rows=Array.isArray(data.rows)?data.rows:[];if(!rows.length)throw new Error('Geen rijen');
+    allRows=rows;contractKey=['contract_price','contractprijs','contract'].find(k=>k in allRows[0])||'contract_price';
+    const nonPrimeRows=allRows.filter(r=>!r.is_primeur);primeurRows=allRows.filter(r=>r.is_primeur===true);
+    const baseForLatest=nonPrimeRows.length?nonPrimeRows:allRows;
+    const cutoffIso=(data.meta&&data.meta.latest_cutoff_friday_iso)||(()=>{const now=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/Brussels'}));const dow=now.getDay();const dsf=dow>=5?dow-5:dow+2;const lf=new Date(now);lf.setDate(now.getDate()-dsf);return lf.toISOString().slice(0,10);})();
+    const target=isoWeekMetaJS(new Date(cutoffIso+'T00:00:00'));
+    latestOverallRow=[...baseForLatest].reverse().find(r=>{const hq=(r.notering_fontane!=null)||(r.notering_challenger!=null)||(r.notering!=null)||(r[contractKey]!=null);if(!hq)return false;const m=isoWeekMetaJS(new Date((r.friday_date||r.date)+'T00:00:00'));return m.week===target.week&&m.year===target.year;})||baseForLatest[baseForLatest.length-1];
+    const seasonsRaw=Array.from(new Set(nonPrimeRows.map(r=>r.week_num>=36?r.week_year:r.week_year-1))).sort((a,b)=>b-a);
+    const allowed=[2024,2025].filter(y=>seasonsRaw.includes(y));
+    const sel=document.getElementById('seasonSelect');sel.innerHTML='';
+    allowed.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=`W36 ${y} – W36 ${y+1}`;sel.appendChild(o);});
+    const suggested=data.meta&&data.meta.suggested_season_start_year;
+    seasonStartYear=allowed.includes(suggested)?suggested:(allowed[0]||seasonsRaw[0]);sel.value=seasonStartYear;
+    function updateSeason(){
+      const y=parseInt(sel.value,10);seasonStartYear=y;
+      const sd=isoWeekStart(y,36),em=isoWeekStart(y+1,36),ed=new Date(em);ed.setDate(em.getDate()+6);
+      seasonRows=nonPrimeRows.filter(r=>{const d=new Date((r.friday_date||r.date)+'T00:00:00');return d>=sd&&d<=ed;});
+      const st=`W36 ${y} – W36 ${y+1}`;
+      const lf=document.getElementById('seasonLabelVarietyFontane'),lc=document.getElementById('seasonLabelVarietyChallenger');
+      if(lf)lf.textContent=st;if(lc)lc.textContent=st;
+      renderChartFontane();renderChartChallenger();renderTableVariety('fontane');renderTableVariety('challenger');
+    }
+    sel.onchange=updateSeason;updateSeason();renderKPIVarieties();
+    if(primeurRows.length){primeurYears=Array.from(new Set(primeurRows.map(r=>new Date((r.friday_date||r.date)+'T00:00:00').getFullYear()))).sort((a,b)=>b-a);currentPrimeurYear=primeurYears[0];renderPrimeursTabs();renderPrimeurs();document.getElementById('primeursSection').style.display='';}else{document.getElementById('primeursSection').style.display='none';}
+    document.getElementById('lastUpdate').textContent=new Date().toLocaleString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{timeZone:'Europe/Brussels'});
+    document.getElementById('year').textContent=new Date().getFullYear();
+    hideLoaders();
+  }catch(err){
+    const d=T[LANG]||T.nl;
+    ['chartLoaderText','chart2LoaderText','tableLoaderText','table2LoaderText'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=(d.loading_error||'')+err.message;});
+    ['chartLoader','chart2Loader','tableLoader','table2Loader'].forEach(id=>document.getElementById(id).classList.remove('loading-hidden'));
+  }
+})();
+</script>
+
+<!-- Cookie banner -->
+<div id="cookie-banner" style="display:none;position:fixed;bottom:.75rem;left:.75rem;right:.75rem;z-index:60">
+  <div style="max-width:var(--max-w);margin:0 auto">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:1rem;padding:1rem 1.5rem;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 12px 40px rgba(0,0,0,.12)">
+      <div style="flex:1;min-width:240px;font-size:.82rem;color:var(--body)"><strong style="color:var(--ink)">Cookies</strong> — Deze website gebruikt analytische cookies (Google Analytics). Je data wordt anoniem verwerkt.</div>
+      <div style="display:flex;gap:.5rem">
+        <button id="cookie-accept" class="hbtn hbtn-cta" style="font-size:.8rem">Accepteren</button>
+        <button id="cookie-decline" class="hbtn" style="font-size:.8rem">Weigeren</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){const CK='belgapomnotering_cookie_consent',b=document.getElementById('cookie-banner'),hide=()=>{if(b)b.style.display='none'},show=()=>{if(b)b.style.display='block'};const s=localStorage.getItem(CK);if(s==='accepted'){loadGAOnce();hide();}else if(s==='declined'){hide();}else{show();}document.getElementById('cookie-accept')?.addEventListener('click',()=>{localStorage.setItem(CK,'accepted');loadGAOnce();hide();});document.getElementById('cookie-decline')?.addEventListener('click',()=>{localStorage.setItem(CK,'declined');hide();});})();
+</script>
 </body>
 </html>
