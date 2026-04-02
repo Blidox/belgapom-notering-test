@@ -452,7 +452,7 @@ function applyI18N(){
 }
 
 const euro=v=>(v==null||v==='')?'–':new Intl.NumberFormat(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(Number(v));
-const toNum=v=>{if(v==null||v==='')return null;if(typeof v==='number')return isFinite(v)&&v>0?v:null;const s=String(v).replace(/[€\s]/g,'').replace(',','.');const n=Number(s);return isFinite(n)&&n>0?n:null;};
+const toNum=v=>{if(v==null||v==='')return null;if(typeof v==='number')return isFinite(v)?v:null;const s=String(v).replace(/[€\s]/g,'').replace(',','.');if(s==='')return null;const n=Number(s);return isFinite(n)?n:null;};
 function formatDateISO(iso){if(!iso)return'–';const d=new Date(iso+'T00:00:00');return d.toLocaleDateString(LANG==='fr'?'fr-BE':LANG==='en'?'en-GB':'nl-BE',{day:'2-digit',month:'2-digit',year:'numeric'});}
 function isoWeekMetaJS(dateObj){const date=new Date(dateObj);const dayNr=(date.getDay()+6)%7;const thu=new Date(date);thu.setDate(date.getDate()-dayNr+3);const firstThu=new Date(thu.getFullYear(),0,4);const ftDay=(firstThu.getDay()+6)%7;firstThu.setDate(firstThu.getDate()-ftDay+3);return{week:1+Math.round((thu-firstThu)/(7*24*3600*1000)),year:thu.getFullYear()};}
 function isoWeekStart(y,w){const simple=new Date(y,0,1+(w-1)*7);let dow=simple.getDay();if(dow===0)dow=7;const mon=new Date(simple);mon.setDate(simple.getDate()-dow+1);return new Date(mon.getFullYear(),mon.getMonth(),mon.getDate());}
